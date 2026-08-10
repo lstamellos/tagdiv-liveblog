@@ -82,6 +82,10 @@ final class Tagdiv_Liveblog_Plugin {
 	/**
 	 * Composer control map.
 	 *
+	 * tagDiv's native general array owns the standard CSS / Design Options panel.
+	 * Whole-block background, border, padding, radius, shadow and responsive CSS
+	 * therefore remain native Composer settings rather than parallel controls.
+	 *
 	 * @return array<int,array<string,mixed>>
 	 */
 	private static function get_block_params() {
@@ -124,14 +128,7 @@ final class Tagdiv_Liveblog_Plugin {
 				'class'       => 'tdc-textfield-extrabig',
 			),
 
-			// Whole block surface.
-			self::color_param( 'block_background', __( 'Block background', 'tagdiv-liveblog' ), 'Block' ),
-			self::color_param( 'block_border_color', __( 'Block border color', 'tagdiv-liveblog' ), 'Block' ),
-			self::number_param( 'block_border_width', __( 'Block border width', 'tagdiv-liveblog' ), 'Block', 0 ),
-			self::number_param( 'block_radius', __( 'Block border radius', 'tagdiv-liveblog' ), 'Block', 0 ),
-			self::number_param( 'block_padding', __( 'Block padding', 'tagdiv-liveblog' ), 'Block', 0 ),
-
-			// Author metadata can be placed independently above/below entry content.
+			// Metadata.
 			array(
 				'param_name' => 'show_author',
 				'type'       => 'dropdown',
@@ -140,7 +137,7 @@ final class Tagdiv_Liveblog_Plugin {
 					__( 'Hide', 'tagdiv-liveblog' ) => 'no',
 				),
 				'heading'    => __( 'Author name', 'tagdiv-liveblog' ),
-				'group'      => __( 'Author meta', 'tagdiv-liveblog' ),
+				'group'      => __( 'Meta', 'tagdiv-liveblog' ),
 			),
 			array(
 				'param_name' => 'show_avatar',
@@ -150,13 +147,8 @@ final class Tagdiv_Liveblog_Plugin {
 					__( 'Hide', 'tagdiv-liveblog' ) => 'no',
 				),
 				'heading'    => __( 'Avatar', 'tagdiv-liveblog' ),
-				'group'      => __( 'Author meta', 'tagdiv-liveblog' ),
+				'group'      => __( 'Meta', 'tagdiv-liveblog' ),
 			),
-			self::position_param( 'author_position', __( 'Author position', 'tagdiv-liveblog' ), 'Author meta', 'top' ),
-			self::order_param( 'author_order', __( 'Author order', 'tagdiv-liveblog' ), 'Author meta', '2' ),
-			self::alignment_param( 'author_alignment', __( 'Author alignment', 'tagdiv-liveblog' ), 'Author meta', 'left' ),
-
-			// Timestamp metadata has independent placement and display mode.
 			array(
 				'param_name' => 'show_timestamp',
 				'type'       => 'dropdown',
@@ -165,28 +157,77 @@ final class Tagdiv_Liveblog_Plugin {
 					__( 'Hide', 'tagdiv-liveblog' ) => 'no',
 				),
 				'heading'    => __( 'Timestamp', 'tagdiv-liveblog' ),
-				'group'      => __( 'Time meta', 'tagdiv-liveblog' ),
+				'group'      => __( 'Meta', 'tagdiv-liveblog' ),
 			),
 			array(
 				'param_name' => 'time_display',
 				'type'       => 'dropdown',
 				'value'      => array(
-					__( 'Exact time', 'tagdiv-liveblog' )   => 'exact',
+					__( 'Exact time', 'tagdiv-liveblog' )    => 'exact',
 					__( 'Relative time', 'tagdiv-liveblog' ) => 'relative',
-					__( 'Both', 'tagdiv-liveblog' )         => 'both',
+					__( 'Both', 'tagdiv-liveblog' )          => 'both',
 				),
 				'heading'    => __( 'Time display', 'tagdiv-liveblog' ),
-				'group'      => __( 'Time meta', 'tagdiv-liveblog' ),
+				'group'      => __( 'Meta', 'tagdiv-liveblog' ),
 			),
-			self::position_param( 'timestamp_position', __( 'Timestamp position', 'tagdiv-liveblog' ), 'Time meta', 'top' ),
-			self::order_param( 'timestamp_order', __( 'Timestamp order', 'tagdiv-liveblog' ), 'Time meta', '1' ),
-			self::alignment_param( 'timestamp_alignment', __( 'Timestamp alignment', 'tagdiv-liveblog' ), 'Time meta', 'left' ),
-
-			self::number_param( 'meta_stack_gap', __( 'Meta/content vertical gap', 'tagdiv-liveblog' ), 'Meta spacing', 12 ),
-			self::color_param( 'meta_background', __( 'Meta background', 'tagdiv-liveblog' ), 'Meta spacing' ),
-			self::color_param( 'meta_text_color', __( 'Meta text color', 'tagdiv-liveblog' ), 'Meta spacing' ),
-			self::number_param( 'meta_padding', __( 'Meta padding', 'tagdiv-liveblog' ), 'Meta spacing', 0 ),
-			self::number_param( 'meta_gap', __( 'Author item gap', 'tagdiv-liveblog' ), 'Meta spacing', 8 ),
+			array(
+				'param_name' => 'meta_layout',
+				'type'       => 'dropdown',
+				'value'      => array(
+					__( 'Stacked', 'tagdiv-liveblog' ) => 'stacked',
+					__( 'Inline', 'tagdiv-liveblog' )  => 'inline',
+				),
+				'heading'    => __( 'Meta layout', 'tagdiv-liveblog' ),
+				'group'      => __( 'Meta', 'tagdiv-liveblog' ),
+			),
+			self::position_param( 'meta_position', __( 'Meta position', 'tagdiv-liveblog' ), 'Meta', 'top' ),
+			array(
+				'param_name' => 'meta_order',
+				'type'       => 'dropdown',
+				'value'      => array(
+					__( 'Timestamp first', 'tagdiv-liveblog' ) => 'time_author',
+					__( 'Author first', 'tagdiv-liveblog' )    => 'author_time',
+				),
+				'heading'    => __( 'Meta order', 'tagdiv-liveblog' ),
+				'group'      => __( 'Meta', 'tagdiv-liveblog' ),
+			),
+			self::alignment_param( 'meta_alignment', __( 'Meta alignment', 'tagdiv-liveblog' ), 'Meta', 'left' ),
+			array(
+				'param_name'  => 'meta_separator',
+				'type'        => 'textfield',
+				'value'       => '',
+				'heading'     => __( 'Inline separator', 'tagdiv-liveblog' ),
+				'description' => __( 'Character or symbol shown between timestamp and author in Inline layout, e.g. ·, /, —.', 'tagdiv-liveblog' ),
+				'holder'      => 'div',
+				'class'       => 'tdc-textfield-small',
+				'group'       => __( 'Meta', 'tagdiv-liveblog' ),
+			),
+			array(
+				'param_name'  => 'timestamp_prefix',
+				'type'        => 'textfield',
+				'value'       => '',
+				'heading'     => __( 'Timestamp prefix', 'tagdiv-liveblog' ),
+				'description' => __( 'Optional character or symbol before the timestamp.', 'tagdiv-liveblog' ),
+				'holder'      => 'div',
+				'class'       => 'tdc-textfield-small',
+				'group'       => __( 'Meta', 'tagdiv-liveblog' ),
+			),
+			array(
+				'param_name'  => 'author_prefix',
+				'type'        => 'textfield',
+				'value'       => '',
+				'heading'     => __( 'Author prefix', 'tagdiv-liveblog' ),
+				'description' => __( 'Optional character or symbol before the author metadata.', 'tagdiv-liveblog' ),
+				'holder'      => 'div',
+				'class'       => 'tdc-textfield-small',
+				'group'       => __( 'Meta', 'tagdiv-liveblog' ),
+			),
+			self::number_param( 'meta_stack_gap', __( 'Meta/content vertical gap', 'tagdiv-liveblog' ), 'Meta', 12 ),
+			self::number_param( 'meta_inline_gap', __( 'Inline meta gap', 'tagdiv-liveblog' ), 'Meta', 8 ),
+			self::color_param( 'meta_background', __( 'Meta background', 'tagdiv-liveblog' ), 'Meta' ),
+			self::color_param( 'meta_text_color', __( 'Meta text color', 'tagdiv-liveblog' ), 'Meta' ),
+			self::number_param( 'meta_padding', __( 'Meta padding', 'tagdiv-liveblog' ), 'Meta', 0 ),
+			self::number_param( 'meta_gap', __( 'Avatar/name gap', 'tagdiv-liveblog' ), 'Meta', 8 ),
 
 			// Entry surface.
 			self::color_param( 'entry_background', __( 'Entry background', 'tagdiv-liveblog' ), 'Entry' ),
@@ -200,9 +241,25 @@ final class Tagdiv_Liveblog_Plugin {
 			// Entry content surface.
 			self::color_param( 'content_background', __( 'Content background', 'tagdiv-liveblog' ), 'Content' ),
 			self::color_param( 'content_text_color', __( 'Content text color', 'tagdiv-liveblog' ), 'Content' ),
+			self::color_param( 'content_border_color', __( 'Content border color', 'tagdiv-liveblog' ), 'Content' ),
+			self::number_param( 'content_border_width', __( 'Content border width', 'tagdiv-liveblog' ), 'Content', 0 ),
+			array(
+				'param_name' => 'content_border_style',
+				'type'       => 'dropdown',
+				'value'      => array(
+					__( 'Solid', 'tagdiv-liveblog' )  => 'solid',
+					__( 'Dashed', 'tagdiv-liveblog' ) => 'dashed',
+					__( 'Dotted', 'tagdiv-liveblog' ) => 'dotted',
+					__( 'Double', 'tagdiv-liveblog' ) => 'double',
+					__( 'None', 'tagdiv-liveblog' )   => 'none',
+				),
+				'heading'    => __( 'Content border style', 'tagdiv-liveblog' ),
+				'group'      => __( 'Content', 'tagdiv-liveblog' ),
+			),
+			self::number_param( 'content_radius', __( 'Content border radius', 'tagdiv-liveblog' ), 'Content', 0 ),
 			self::number_param( 'content_padding', __( 'Content padding', 'tagdiv-liveblog' ), 'Content', 0 ),
 
-			// Timeline stays behind entry boxes; its offset remains relative to feed.
+			// Timeline stays behind complete entry boxes.
 			array(
 				'param_name' => 'timeline',
 				'type'       => 'dropdown',
@@ -275,29 +332,6 @@ final class Tagdiv_Liveblog_Plugin {
 			'value'      => array(
 				__( 'Above content', 'tagdiv-liveblog' ) => 'top',
 				__( 'Below content', 'tagdiv-liveblog' ) => 'bottom',
-			),
-			'std'        => $default,
-			'heading'    => $label,
-			'group'      => $group,
-		);
-	}
-
-	/**
-	 * Build order control used when metadata shares the same side of content.
-	 *
-	 * @param string $name    Parameter name.
-	 * @param string $label   Label.
-	 * @param string $group   Group.
-	 * @param string $default Default value.
-	 * @return array<string,mixed>
-	 */
-	private static function order_param( $name, $label, $group, $default ) {
-		return array(
-			'param_name' => $name,
-			'type'       => 'dropdown',
-			'value'      => array(
-				__( 'First', 'tagdiv-liveblog' )  => '1',
-				__( 'Second', 'tagdiv-liveblog' ) => '2',
 			),
 			'std'        => $default,
 			'heading'    => $label,
