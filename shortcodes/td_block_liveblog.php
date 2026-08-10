@@ -57,7 +57,7 @@ class td_block_liveblog extends td_block {
 		$classes = $this->get_block_classes() . ' tdlb-block';
 		$style   = $this->build_css_variables();
 		$title   = sanitize_text_field( (string) $this->get_shortcode_att( 'title' ) );
-		$post_id = get_queried_object_id();
+		$post_id = Tagdiv_Liveblog_Plugin::get_liveblog_post_id();
 
 		$buffy  = '<div class="' . esc_attr( $classes ) . '">';
 		$buffy .= $this->get_block_css();
@@ -105,7 +105,7 @@ class td_block_liveblog extends td_block {
 
 		$variables[] = '--tdlb-show-author:' . ( 'no' === $this->get_shortcode_att( 'show_author' ) ? 'none' : 'inline-flex' );
 		$variables[] = '--tdlb-show-avatar:' . ( 'no' === $this->get_shortcode_att( 'show_avatar' ) ? 'none' : 'inline-flex' );
-		$variables[] = '--tdlb-show-timestamp:' . ( 'no' === $this->get_shortcode_att( 'show_timestamp' ) ? 'none' : 'inline-flex' );
+		$variables[] = '--tdlb-show-timestamp:' . ( 'no' === $this->get_shortcode_att( 'show_timestamp' ) ? 'none' : 'block' );
 		$variables[] = '--tdlb-meta-align:' . $this->sanitize_choice( $this->get_shortcode_att( 'meta_alignment' ), array( 'left', 'center', 'right' ), 'left' );
 		$variables[] = '--tdlb-meta-justify:' . $this->alignment_to_flex( $this->get_shortcode_att( 'meta_alignment' ) );
 		$variables[] = '--tdlb-timeline-display:' . ( 'yes' === $this->get_shortcode_att( 'timeline' ) ? 'block' : 'none' );
@@ -217,33 +217,50 @@ class td_block_liveblog extends td_block {
 	/**
 	 * Static representative preview for tagDiv Composer.
 	 *
+	 * The markup intentionally mirrors Liveblog 1.12+'s React output rather than
+	 * the legacy PHP single-entry template. This keeps Composer styling behavior
+	 * representative of the public frontend without starting polling/editor code.
+	 *
 	 * @return string
 	 */
 	private function render_preview() {
 		$entries = array(
 			array(
-				'time'   => '12:34',
-				'author' => __( 'Reporter', 'tagdiv-liveblog' ),
-				'text'   => __( 'A live update appears here. Typography, spacing, borders and metadata can be adjusted from the Composer controls.', 'tagdiv-liveblog' ),
+				'relative' => __( 'Just now', 'tagdiv-liveblog' ),
+				'time'     => '12:34',
+				'author'   => __( 'Reporter', 'tagdiv-liveblog' ),
+				'text'     => __( 'A live update appears here. Typography, spacing, borders and metadata can be adjusted from the Composer controls.', 'tagdiv-liveblog' ),
 			),
 			array(
-				'time'   => '12:41',
-				'author' => __( 'Editor', 'tagdiv-liveblog' ),
-				'text'   => __( 'New entries inserted by Liveblog will inherit the same scoped presentation automatically.', 'tagdiv-liveblog' ),
+				'relative' => __( '7 minutes ago', 'tagdiv-liveblog' ),
+				'time'     => '12:27',
+				'author'   => __( 'Editor', 'tagdiv-liveblog' ),
+				'text'     => __( 'New entries inserted by Liveblog will inherit the same scoped presentation automatically.', 'tagdiv-liveblog' ),
 			),
 		);
 
-		$out = '<div id="liveblog-entries" class="tdlb-preview" aria-label="' . esc_attr__( 'Liveblog preview', 'tagdiv-liveblog' ) . '">';
-		foreach ( $entries as $index => $entry ) {
-			$out .= '<div class="liveblog-entry tdlb-preview-entry" data-timestamp="' . esc_attr( (string) ( time() - ( $index * 420 ) ) ) . '">';
-			$out .= '<header class="liveblog-meta">';
-			$out .= '<span class="liveblog-author-avatar"><span class="tdlb-preview-avatar" aria-hidden="true"></span></span>';
-			$out .= '<span class="liveblog-author-name">' . esc_html( $entry['author'] ) . '</span>';
-			$out .= '<span class="liveblog-meta-time"><span class="liveblog-time-update">' . esc_html( $entry['time'] ) . '</span></span>';
-			$out .= '</header>';
-			$out .= '<div class="liveblog-entry-text"><p>' . esc_html( $entry['text'] ) . '</p></div>';
+		$out = '<div class="liveblog-feed tdlb-preview" aria-label="' . esc_attr__( 'Liveblog preview', 'tagdiv-liveblog' ) . '">';
+
+		foreach ( $entries as $entry ) {
+			$out .= '<article class="liveblog-entry tdlb-preview-entry">';
+			$out .= '<aside class="liveblog-entry-aside">';
+			$out .= '<span class="liveblog-meta-time">';
+			$out .= '<span>' . esc_html( $entry['relative'] ) . '</span>';
+			$out .= '<span>' . esc_html( $entry['time'] ) . '</span>';
+			$out .= '</span>';
+			$out .= '</aside>';
+			$out .= '<div class="liveblog-entry-main">';
+			$out .= '<header class="liveblog-meta-authors">';
+			$out .= '<div class="liveblog-meta-author">';
+			$out .= '<div class="liveblog-meta-author-avatar"><span class="tdlb-preview-avatar" aria-hidden="true"></span></div>';
+			$out .= '<span class="liveblog-meta-author-name">' . esc_html( $entry['author'] ) . '</span>';
 			$out .= '</div>';
+			$out .= '</header>';
+			$out .= '<div class="liveblog-entry-content"><p>' . esc_html( $entry['text'] ) . '</p></div>';
+			$out .= '</div>';
+			$out .= '</article>';
 		}
+
 		$out .= '</div>';
 
 		return $out;
