@@ -25,17 +25,25 @@ final class Tagdiv_Liveblog_Plugin {
 	public static function init() {
 		add_action( 'tdc_init', array( __CLASS__, 'on_tdc_init' ), 11 );
 
-		// Enqueue before Liveblog's default priority so our relocation script is
-		// printed before Liveblog's footer app and can move the native root first.
+		// Enqueue before Liveblog's default priority (10). Both scripts are footer
+		// scripts, so the relocation helper is printed before Liveblog's app.
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ), 5 );
 	}
 
 	/**
-	 * Wait for tagDiv Composer to finish loading its API before registering.
+	 * Register after tagDiv Composer has loaded its API.
 	 *
 	 * @return void
 	 */
 	public static function on_tdc_init() {
+		// The normal Newspaper lifecycle reaches tdc_loaded after tdc_init. The
+		// fallback also makes the integration safe if another bootstrap path has
+		// already fired tdc_loaded before this callback executes.
+		if ( did_action( 'tdc_loaded' ) ) {
+			self::register_block();
+			return;
+		}
+
 		add_action( 'tdc_loaded', array( __CLASS__, 'register_block' ) );
 	}
 
@@ -45,7 +53,12 @@ final class Tagdiv_Liveblog_Plugin {
 	 * @return void
 	 */
 	public static function register_block() {
-		if ( self::$block_registered || ! class_exists( 'td_api_block' ) || ! class_exists( 'td_block' ) ) {
+		if (
+			self::$block_registered
+			|| ! class_exists( 'td_api_block' )
+			|| ! class_exists( 'td_block' )
+			|| ! class_exists( 'td_config' )
+		) {
 			return;
 		}
 
@@ -72,12 +85,45 @@ final class Tagdiv_Liveblog_Plugin {
 	/**
 	 * Composer control map.
 	 *
-	 * The first release intentionally limits itself to presentation. Liveblog
-	 * ordering, polling, pagination and administration remain owned upstream.
+	 * The installed Newspaper/td-composer runtime exposes
+	 * td_config::get_map_block_general_array(). tagDiv's documented plugin
+	 * pattern is to merge these native parameters into custom block controls,
+	 * so Design Options and other standard block properties stay owned by
+	 * tagDiv rather than being reimplemented here.
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
 	private static function get_block_params() {
+		$custom = self::get_custom_block_params();
+
+		if ( is_callable( array( 'td_config', 'get_map_block_general_array' ) ) ) {
+			$general = td_config::get_map_block_general_array();
+			if ( is_array( $general ) ) {
+				return array_merge( $general, $custom );
+			}
+		}
+
+		// Defensive fallback for an unexpected tagDiv build. This keeps Design
+		// Options available without assuming anything else about its internals.
+		$custom[] = array(
+			'param_name' => 'tdc_css',
+			'value'      => '',
+			'type'       => 'tdc_css_editor',
+			'heading'    => '',
+			'group'      => 'Design options',
+		);
+
+		return $custom;
+	}
+
+	/**
+	 * Presentation-only controls owned by this integration.
+	 *
+	 * Liveblog ordering, polling, pagination and administration remain upstream.
+	 *
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function get_custom_block_params() {
 		return array(
 			array(
 				'param_name'  => 'title',
@@ -156,13 +202,6 @@ final class Tagdiv_Liveblog_Plugin {
 			self::color_param( 'timeline_color', __( 'Timeline color', 'tagdiv-liveblog' ), 'Timeline' ),
 			self::number_param( 'timeline_width', __( 'Timeline width', 'tagdiv-liveblog' ), 'Timeline', 2 ),
 			self::number_param( 'timeline_offset', __( 'Timeline left offset', 'tagdiv-liveblog' ), 'Timeline', 10 ),
-			array(
-				'param_name' => 'tdc_css',
-				'value'      => '',
-				'type'       => 'tdc_css_editor',
-				'heading'    => '',
-				'group'      => 'Design options',
-			),
 		);
 	}
 
