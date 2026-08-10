@@ -73,8 +73,73 @@ final class Tagdiv_Liveblog_Pagination {
 	window.__tdlbEntriesPerPageBootstrap = true;
 
 	/*
+	 * Numeric entry deep links use jump-to-key-event rather than the normal first
+	 * page request. Cached HTML can contain an old latest_entry_id/timestamp, so
+	 * capture a fresh native pagination anchor in parallel. Until it is available,
+	 * the upstream-safe `latest` token is used. This affects only sessions that
+	 * started from a numeric entry fragment.
+	 */
+	var deepLinkMatch = window.location.hash.match(/^#(\d+)$/);
+	var deepLinkEntryId = deepLinkMatch ? deepLinkMatch[1] : '';
+	var deepLinkSession = !!deepLinkEntryId;
+	var deepLinkAnchor = '';
+	var endpointUrl = String(window.liveblog_settings.endpoint_url || '');
+
+	if (deepLinkSession && endpointUrl && typeof window.fetch === 'function') {
+		var anchorUrl = endpointUrl + 'get-entries/1/latest';
+		anchorUrl +=
+			(anchorUrl.indexOf('?') === -1 ? '?' : '&') +
+			'tdlb_per_page=' +
+			encodeURIComponent(String(perPage));
+
+		window.fetch(anchorUrl, { credentials: 'same-origin' })
+			.then(function (response) {
+				return response.ok ? response.json() : null;
+			})
+			.then(function (payload) {
+				var latestEntry =
+					payload && payload.entries && payload.entries.length
+						? payload.entries[0]
+						: null;
+
+				if (
+					latestEntry &&
+					latestEntry.id &&
+					latestEntry.timestamp
+				) {
+					deepLinkAnchor =
+						String(latestEntry.id) + '-' + String(latestEntry.timestamp);
+					window.__tdlbDeepLinkAnchor = deepLinkAnchor;
+				}
+			})
+			.catch(function () {
+				/* Native `latest` fallback remains sufficient for navigation. */
+			});
+	}
+
+	function replaceLastKnownEntry(requestUrl, anchor) {
+		if (!anchor) {
+			return requestUrl;
+		}
+
+		requestUrl = requestUrl.replace(
+			/(jump-to-key-event\/\d+\/)[^/?]+/,
+			'$1' + anchor
+		);
+
+		requestUrl = requestUrl.replace(
+			/(get-entries\/\d+\/)[^/?]+/,
+			'$1' + anchor
+		);
+
+		return requestUrl;
+	}
+
+	/*
 	 * The REST request independently determines its page size in PHP. Pass the
-	 * same value only on upstream native get-entries requests.
+	 * same block-configured value on upstream native paginated requests. For a
+	 * numeric deep-link session, also make the jump request use the current full
+	 * dataset and keep subsequent non-first pages on the captured fresh anchor.
 	 */
 	if (window.XMLHttpRequest && !window.__tdlbEntriesPerPageXhrPatched) {
 		var originalOpen = window.XMLHttpRequest.prototype.open;
@@ -82,24 +147,149 @@ final class Tagdiv_Liveblog_Pagination {
 		window.XMLHttpRequest.prototype.open = function (method, url) {
 			var args = Array.prototype.slice.call(arguments);
 			var requestUrl = typeof url === 'string' ? url : '';
+			var isJumpRequest = requestUrl.indexOf('jump-to-key-event/') !== -1;
+			var pageMatch = requestUrl.match(/get-entries\/(\d+)\//);
+			var isEntriesRequest = !!pageMatch;
+			var isNativePaginationRequest = isJumpRequest || isEntriesRequest;
+
+			if (deepLinkSession && isJumpRequest) {
+				requestUrl = replaceLastKnownEntry(requestUrl, 'latest');
+			}
+
+			if (deepLinkSession && isEntriesRequest) {
+				var requestedPage = parseInt(pageMatch[1], 10);
+				var requestAnchor =
+					requestedPage === 1 ? 'latest' : deepLinkAnchor || 'latest';
+
+				requestUrl = replaceLastKnownEntry(requestUrl, requestAnchor);
+
+				if (requestedPage === 1 && typeof this.addEventListener === 'function') {
+					var xhr = this;
+					xhr.addEventListener(
+						'load',
+						function () {
+							if (xhr.status >= 200 && xhr.status < 300) {
+								deepLinkSession = false;
+							}
+						},
+						{ once: true }
+					);
+				}
+			}
 
 			if (
-				requestUrl.indexOf('get-entries/') !== -1 &&
+				isNativePaginationRequest &&
 				requestUrl.indexOf('tdlb_per_page=') === -1
 			) {
 				requestUrl +=
 					(requestUrl.indexOf('?') === -1 ? '?' : '&') +
 					'tdlb_per_page=' +
 					encodeURIComponent(String(perPage));
-
-				args[1] = requestUrl;
 			}
+
+			args[1] = requestUrl;
 
 			return originalOpen.apply(this, args);
 		};
 
 		window.__tdlbEntriesPerPageXhrPatched = true;
 	}
+
+	/*
+	 * Upstream scrolls a jumped-to entry when its React EntryContainer mounts.
+	 * In integrated layouts that scroll can be missed during asynchronous render
+	 * timing, so retain a narrow fallback: while the original numeric fragment is
+	 * still active, wait for the corresponding native entry node and perform the
+	 * same one-shot scrollIntoView(). If native navigation has already cleared the
+	 * fragment, the fallback deliberately does nothing.
+	 */
+	function scrollToDeepLinkEntry() {
+		if (
+			!deepLinkEntryId ||
+			window.location.hash !== '#' + deepLinkEntryId
+		) {
+			return false;
+		}
+
+		var target = document.getElementById('id_' + deepLinkEntryId);
+
+		if (!target || !slot.contains(target)) {
+			return false;
+		}
+
+		var performScroll = function () {
+			if (window.location.hash !== '#' + deepLinkEntryId) {
+				return;
+			}
+
+			target.scrollIntoView({ block: 'start', behavior: 'instant' });
+			window.__tdlbDeepLinkScrolled = deepLinkEntryId;
+		};
+
+		if (typeof window.requestAnimationFrame === 'function') {
+			window.requestAnimationFrame(function () {
+				window.requestAnimationFrame(performScroll);
+			});
+		} else {
+			window.setTimeout(performScroll, 0);
+		}
+
+		return true;
+	}
+
+	if (deepLinkSession && !scrollToDeepLinkEntry() && typeof window.MutationObserver === 'function') {
+		var deepLinkObserver = new window.MutationObserver(function () {
+			if (scrollToDeepLinkEntry()) {
+				deepLinkObserver.disconnect();
+			}
+		});
+
+		deepLinkObserver.observe(slot, { childList: true, subtree: true });
+
+		window.setTimeout(function () {
+			deepLinkObserver.disconnect();
+		}, 10000);
+	}
+
+	/*
+	 * A numeric fragment is an upstream deep link to one Liveblog entry. Once the
+	 * visitor uses native pagination or merges newly available entries, that deep
+	 * link no longer represents the currently displayed page. Remove only that
+	 * numeric fragment, without reloading or changing Liveblog pagination state.
+	 */
+	function clearEntryDeepLinkHash() {
+		if (
+			!/^#\d+$/.test(window.location.hash) ||
+			!window.history ||
+			typeof window.history.replaceState !== 'function'
+		) {
+			return;
+		}
+
+		window.history.replaceState(
+			window.history.state,
+			document.title,
+			window.location.pathname + window.location.search
+		);
+	}
+
+	document.addEventListener('click', function (event) {
+		var target = event.target;
+
+		if (!target || typeof target.closest !== 'function') {
+			return;
+		}
+
+		var button = target.closest(
+			'.liveblog-pagination-btn, .liveblog-update-btn'
+		);
+
+		if (!button || !slot.contains(button)) {
+			return;
+		}
+
+		clearEntryDeepLinkHash();
+	});
 }());
 JS;
 
