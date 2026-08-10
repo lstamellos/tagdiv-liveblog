@@ -122,16 +122,29 @@ final class Tagdiv_Liveblog_Plugin {
 	}
 
 	/**
-	 * Presentation-only controls owned by this integration.
+	 * Presentation controls owned by this integration.
 	 *
 	 * Header title, URL and block-header style stay owned by TagDiv's native
-	 * General/Header settings. Liveblog ordering, polling, pagination and
-	 * administration remain upstream.
+	 * General/Header settings. Liveblog ordering, polling, native pagination
+	 * behaviour and administration remain upstream. Only the native page size is
+	 * configurable here.
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
 	private static function get_custom_block_params() {
 		return array(
+			array(
+				'param_name'  => 'entries_per_page',
+				'type'        => 'textfield',
+				'value'       => '20',
+				'std'         => '20',
+				'heading'     => __( 'Liveblog entries per page', 'tagdiv-liveblog' ),
+				'description' => __( 'Number of Liveblog entries shown on each native Liveblog pagination page. Allowed range: 1–100.', 'tagdiv-liveblog' ),
+				'holder'      => 'div',
+				'class'       => 'tdc-textfield-small',
+				'group'       => __( 'General', 'tagdiv-liveblog' ),
+			),
+
 			// Metadata.
 			array(
 				'param_name' => 'show_author',

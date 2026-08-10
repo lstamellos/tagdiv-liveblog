@@ -24,6 +24,7 @@ class td_block_liveblog extends td_block {
 
 		$this->shortcode_atts = shortcode_atts(
 			array(
+				'entries_per_page'     => '20',
 				'show_author'          => 'yes',
 				'show_avatar'          => 'yes',
 				'show_timestamp'       => 'yes',
@@ -85,6 +86,12 @@ class td_block_liveblog extends td_block {
 		$block_title = $this->get_block_title();
 		$post_id     = Tagdiv_Liveblog_Plugin::get_liveblog_post_id();
 
+		$entries_per_page = absint( $this->get_shortcode_att( 'entries_per_page' ) );
+		if ( $entries_per_page < 1 ) {
+			$entries_per_page = 20;
+		}
+		$entries_per_page = min( $entries_per_page, 100 );
+
 		$buffy  = '<div class="' . esc_attr( $classes ) . '">';
 		$buffy .= $this->get_block_css();
 
@@ -92,7 +99,7 @@ class td_block_liveblog extends td_block {
 			$buffy .= '<div class="td-block-title-wrap">' . $block_title . '</div>';
 		}
 
-		$buffy .= '<div class="tdlb-liveblog" data-tagdiv-liveblog-slot="1" data-liveblog-post-id="' . esc_attr( (string) absint( $post_id ) ) . '"' . ( $style ? ' style="' . esc_attr( $style ) . '"' : '' ) . '>';
+		$buffy .= '<div class="tdlb-liveblog" data-tagdiv-liveblog-slot="1" data-liveblog-post-id="' . esc_attr( (string) absint( $post_id ) ) . '" data-liveblog-entries-per-page="' . esc_attr( (string) $entries_per_page ) . '"' . ( $style ? ' style="' . esc_attr( $style ) . '"' : '' ) . '>';
 
 		if ( Tagdiv_Liveblog_Plugin::is_composer_request() ) {
 			$buffy .= $this->render_preview();
