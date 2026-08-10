@@ -25,7 +25,7 @@
 	--tdlb-show-author: inline-flex;
 	--tdlb-show-avatar: inline-flex;
 	--tdlb-author-section-display: flex;
-	--tdlb-time-section-display: block;
+	--tdlb-time-section-display: flex;
 	--tdlb-relative-time-display: none;
 	--tdlb-exact-time-display: block;
 	--tdlb-meta-basis: 100%;
@@ -126,6 +126,8 @@
 	display: var(--tdlb-time-section-display);
 	order: var(--tdlb-timestamp-order);
 	min-width: 0;
+	align-items: center;
+	justify-content: var(--tdlb-meta-group-justify);
 }
 
 .tdlb-liveblog .liveblog-meta-authors {
@@ -154,7 +156,10 @@
 }
 
 .tdlb-liveblog .liveblog-meta-time {
-	display: block;
+	display: inline-flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: var(--tdlb-meta-group-justify);
 	color: var(--tdlb-meta-color);
 	text-align: inherit;
 	text-decoration: none;
