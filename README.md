@@ -28,27 +28,31 @@ Automattic Liveblog continues to own:
 
 Automattic Liveblog injects one `#wpcom-liveblog-container` into post content. This plugin does **not** disable that behavior.
 
-The Composer element renders a slot. On liveblog posts, a tiny footer script runs before Automattic Liveblog's frontend app and moves the native container into that slot. If a Newspaper template does not render Post Content at all, the script creates the same minimal upstream root (`#wpcom-liveblog-container` with the liveblog post ID class) before the Liveblog app starts. This has two useful properties:
+The Composer element renders a slot. On Liveblog posts, a tiny footer script runs before Automattic Liveblog's frontend app and moves the native container into that slot. If a Newspaper template does not render Post Content at all, the script creates the same minimal upstream root (`#wpcom-liveblog-container` with the Liveblog post ID class) before the Liveblog app starts.
 
-1. there is never a second Liveblog runtime or duplicate container;
-2. if the Composer element is absent, Liveblog remains in its native location and continues to work normally.
+There is never a second Liveblog runtime or duplicate container, and no entry markup is reconstructed by JavaScript.
 
-No entry markup is reconstructed by JavaScript.
+## Composer controls
 
-## Initial controls
+Version 0.1.12 includes:
 
-The first implementation includes controls for:
-
-- optional title;
-- author/avatar/timestamp visibility;
-- metadata alignment;
+- native TagDiv Header settings (`custom_title`, `custom_url`, block header style);
+- native TagDiv Design Options / CSS settings for the whole block;
+- author, avatar and timestamp visibility;
+- exact, relative or combined timestamp display;
+- stacked or inline metadata layout;
+- timestamp-first or author-first ordering;
+- metadata alignment, separator and character/symbol prefixes;
 - entry background, text, border, radius, padding and spacing;
 - metadata background, text, padding and spacing;
-- content background, text and padding;
-- optional timeline line;
-- tagDiv Design Options.
+- content background, text, border, radius and padding;
+- optional timeline line rendered behind complete entry boxes.
 
-See [`docs/requirements.md`](docs/requirements.md) for the full requirements map and exclusions.
+See [`docs/requirements.md`](docs/requirements.md) for the requirements map and exclusions.
+
+## Global Single Template support
+
+The Liveblog block can be placed in a Global Single Cloud Template. On posts without an active or archived Liveblog state it emits no slot or container. On Liveblog posts it resolves the real article ID and mounts the single upstream Liveblog container in the configured block location.
 
 ## Requirements
 
@@ -57,14 +61,18 @@ See [`docs/requirements.md`](docs/requirements.md) for the full requirements map
 - Newspaper / tagDiv Composer with the `td_api_block` API (Newspaper V11+)
 - Automattic Liveblog
 
-## Canary status
+## Validated runtime
 
-OmniaTV runtime compatibility has been verified against WordPress 7.0.3, Newspaper 12.7.7, tagDiv Composer 5.4.6 and Liveblog 1.12.2.
+Version 0.1.12 was validated on OmniaTV with:
 
-The first Composer canary confirmed that the single native Liveblog root is relocated into the block correctly. Version 0.1.2 fixes color handling discovered during that canary: tagDiv's color picker can emit RGBA values, so presentation colors are validated as tagDiv-compatible color values instead of being restricted to WordPress hex-only colors.
+- WordPress 7.0.3
+- PHP 8.3.6
+- Newspaper 12.7.7
+- tagDiv Composer 5.4.6
+- Automattic Liveblog 1.12.2
 
-The remaining canary check is to distinguish an empty controlled test Liveblog from a frontend API/runtime failure before changing the relocation mechanism.
+The production Global Single Template gate was verified with one Liveblog slot/container on a Liveblog post and no slot/container on a normal post.
 
-## Status
+## Release packaging
 
-Early integration scaffold. Production Single Post templates should not be changed until the Composer and frontend canary checks are complete.
+GitHub releases include an installable `tagdiv-liveblog-VERSION.zip` asset and a matching SHA-256 checksum.
