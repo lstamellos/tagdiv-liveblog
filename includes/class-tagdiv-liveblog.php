@@ -36,9 +36,6 @@ final class Tagdiv_Liveblog_Plugin {
 	 * @return void
 	 */
 	public static function on_tdc_init() {
-		// The normal Newspaper lifecycle reaches tdc_loaded after tdc_init. The
-		// fallback also makes the integration safe if another bootstrap path has
-		// already fired tdc_loaded before this callback executes.
 		if ( did_action( 'tdc_loaded' ) ) {
 			self::register_block();
 			return;
@@ -85,12 +82,6 @@ final class Tagdiv_Liveblog_Plugin {
 	/**
 	 * Composer control map.
 	 *
-	 * The installed Newspaper/td-composer runtime exposes
-	 * td_config::get_map_block_general_array(). tagDiv's documented plugin
-	 * pattern is to merge these native parameters into custom block controls,
-	 * so Design Options and other standard block properties stay owned by
-	 * tagDiv rather than being reimplemented here.
-	 *
 	 * @return array<int,array<string,mixed>>
 	 */
 	private static function get_block_params() {
@@ -103,8 +94,6 @@ final class Tagdiv_Liveblog_Plugin {
 			}
 		}
 
-		// Defensive fallback for an unexpected tagDiv build. This keeps Design
-		// Options available without assuming anything else about its internals.
 		$custom[] = array(
 			'param_name' => 'tdc_css',
 			'value'      => '',
@@ -134,6 +123,15 @@ final class Tagdiv_Liveblog_Plugin {
 				'holder'      => 'div',
 				'class'       => 'tdc-textfield-extrabig',
 			),
+
+			// Whole block surface.
+			self::color_param( 'block_background', __( 'Block background', 'tagdiv-liveblog' ), 'Block' ),
+			self::color_param( 'block_border_color', __( 'Block border color', 'tagdiv-liveblog' ), 'Block' ),
+			self::number_param( 'block_border_width', __( 'Block border width', 'tagdiv-liveblog' ), 'Block', 0 ),
+			self::number_param( 'block_radius', __( 'Block border radius', 'tagdiv-liveblog' ), 'Block', 0 ),
+			self::number_param( 'block_padding', __( 'Block padding', 'tagdiv-liveblog' ), 'Block', 0 ),
+
+			// Author metadata can be placed independently above/below entry content.
 			array(
 				'param_name' => 'show_author',
 				'type'       => 'dropdown',
@@ -142,7 +140,7 @@ final class Tagdiv_Liveblog_Plugin {
 					__( 'Hide', 'tagdiv-liveblog' ) => 'no',
 				),
 				'heading'    => __( 'Author name', 'tagdiv-liveblog' ),
-				'group'      => __( 'Meta', 'tagdiv-liveblog' ),
+				'group'      => __( 'Author meta', 'tagdiv-liveblog' ),
 			),
 			array(
 				'param_name' => 'show_avatar',
@@ -152,8 +150,13 @@ final class Tagdiv_Liveblog_Plugin {
 					__( 'Hide', 'tagdiv-liveblog' ) => 'no',
 				),
 				'heading'    => __( 'Avatar', 'tagdiv-liveblog' ),
-				'group'      => __( 'Meta', 'tagdiv-liveblog' ),
+				'group'      => __( 'Author meta', 'tagdiv-liveblog' ),
 			),
+			self::position_param( 'author_position', __( 'Author position', 'tagdiv-liveblog' ), 'Author meta', 'top' ),
+			self::order_param( 'author_order', __( 'Author order', 'tagdiv-liveblog' ), 'Author meta', '2' ),
+			self::alignment_param( 'author_alignment', __( 'Author alignment', 'tagdiv-liveblog' ), 'Author meta', 'left' ),
+
+			// Timestamp metadata has independent placement and display mode.
 			array(
 				'param_name' => 'show_timestamp',
 				'type'       => 'dropdown',
@@ -162,19 +165,30 @@ final class Tagdiv_Liveblog_Plugin {
 					__( 'Hide', 'tagdiv-liveblog' ) => 'no',
 				),
 				'heading'    => __( 'Timestamp', 'tagdiv-liveblog' ),
-				'group'      => __( 'Meta', 'tagdiv-liveblog' ),
+				'group'      => __( 'Time meta', 'tagdiv-liveblog' ),
 			),
 			array(
-				'param_name' => 'meta_alignment',
+				'param_name' => 'time_display',
 				'type'       => 'dropdown',
 				'value'      => array(
-					__( 'Left', 'tagdiv-liveblog' )   => 'left',
-					__( 'Center', 'tagdiv-liveblog' ) => 'center',
-					__( 'Right', 'tagdiv-liveblog' )  => 'right',
+					__( 'Exact time', 'tagdiv-liveblog' )   => 'exact',
+					__( 'Relative time', 'tagdiv-liveblog' ) => 'relative',
+					__( 'Both', 'tagdiv-liveblog' )         => 'both',
 				),
-				'heading'    => __( 'Meta alignment', 'tagdiv-liveblog' ),
-				'group'      => __( 'Meta', 'tagdiv-liveblog' ),
+				'heading'    => __( 'Time display', 'tagdiv-liveblog' ),
+				'group'      => __( 'Time meta', 'tagdiv-liveblog' ),
 			),
+			self::position_param( 'timestamp_position', __( 'Timestamp position', 'tagdiv-liveblog' ), 'Time meta', 'top' ),
+			self::order_param( 'timestamp_order', __( 'Timestamp order', 'tagdiv-liveblog' ), 'Time meta', '1' ),
+			self::alignment_param( 'timestamp_alignment', __( 'Timestamp alignment', 'tagdiv-liveblog' ), 'Time meta', 'left' ),
+
+			self::number_param( 'meta_stack_gap', __( 'Meta/content vertical gap', 'tagdiv-liveblog' ), 'Meta spacing', 12 ),
+			self::color_param( 'meta_background', __( 'Meta background', 'tagdiv-liveblog' ), 'Meta spacing' ),
+			self::color_param( 'meta_text_color', __( 'Meta text color', 'tagdiv-liveblog' ), 'Meta spacing' ),
+			self::number_param( 'meta_padding', __( 'Meta padding', 'tagdiv-liveblog' ), 'Meta spacing', 0 ),
+			self::number_param( 'meta_gap', __( 'Author item gap', 'tagdiv-liveblog' ), 'Meta spacing', 8 ),
+
+			// Entry surface.
 			self::color_param( 'entry_background', __( 'Entry background', 'tagdiv-liveblog' ), 'Entry' ),
 			self::color_param( 'entry_text_color', __( 'Entry text color', 'tagdiv-liveblog' ), 'Entry' ),
 			self::color_param( 'entry_border_color', __( 'Entry border color', 'tagdiv-liveblog' ), 'Entry' ),
@@ -182,13 +196,13 @@ final class Tagdiv_Liveblog_Plugin {
 			self::number_param( 'entry_radius', __( 'Entry border radius', 'tagdiv-liveblog' ), 'Entry', 0 ),
 			self::number_param( 'entry_padding', __( 'Entry padding', 'tagdiv-liveblog' ), 'Entry', 16 ),
 			self::number_param( 'entry_gap', __( 'Space between entries', 'tagdiv-liveblog' ), 'Entry', 20 ),
-			self::color_param( 'meta_background', __( 'Meta background', 'tagdiv-liveblog' ), 'Meta' ),
-			self::color_param( 'meta_text_color', __( 'Meta text color', 'tagdiv-liveblog' ), 'Meta' ),
-			self::number_param( 'meta_padding', __( 'Meta padding', 'tagdiv-liveblog' ), 'Meta', 0 ),
-			self::number_param( 'meta_gap', __( 'Meta item gap', 'tagdiv-liveblog' ), 'Meta', 8 ),
+
+			// Entry content surface.
 			self::color_param( 'content_background', __( 'Content background', 'tagdiv-liveblog' ), 'Content' ),
 			self::color_param( 'content_text_color', __( 'Content text color', 'tagdiv-liveblog' ), 'Content' ),
 			self::number_param( 'content_padding', __( 'Content padding', 'tagdiv-liveblog' ), 'Content', 0 ),
+
+			// Timeline stays behind entry boxes; its offset remains relative to feed.
 			array(
 				'param_name' => 'timeline',
 				'type'       => 'dropdown',
@@ -246,6 +260,76 @@ final class Tagdiv_Liveblog_Plugin {
 	}
 
 	/**
+	 * Build top/bottom placement control.
+	 *
+	 * @param string $name    Parameter name.
+	 * @param string $label   Label.
+	 * @param string $group   Group.
+	 * @param string $default Default value.
+	 * @return array<string,mixed>
+	 */
+	private static function position_param( $name, $label, $group, $default ) {
+		return array(
+			'param_name' => $name,
+			'type'       => 'dropdown',
+			'value'      => array(
+				__( 'Above content', 'tagdiv-liveblog' ) => 'top',
+				__( 'Below content', 'tagdiv-liveblog' ) => 'bottom',
+			),
+			'std'        => $default,
+			'heading'    => $label,
+			'group'      => $group,
+		);
+	}
+
+	/**
+	 * Build order control used when metadata shares the same side of content.
+	 *
+	 * @param string $name    Parameter name.
+	 * @param string $label   Label.
+	 * @param string $group   Group.
+	 * @param string $default Default value.
+	 * @return array<string,mixed>
+	 */
+	private static function order_param( $name, $label, $group, $default ) {
+		return array(
+			'param_name' => $name,
+			'type'       => 'dropdown',
+			'value'      => array(
+				__( 'First', 'tagdiv-liveblog' )  => '1',
+				__( 'Second', 'tagdiv-liveblog' ) => '2',
+			),
+			'std'        => $default,
+			'heading'    => $label,
+			'group'      => $group,
+		);
+	}
+
+	/**
+	 * Build horizontal alignment control.
+	 *
+	 * @param string $name    Parameter name.
+	 * @param string $label   Label.
+	 * @param string $group   Group.
+	 * @param string $default Default value.
+	 * @return array<string,mixed>
+	 */
+	private static function alignment_param( $name, $label, $group, $default ) {
+		return array(
+			'param_name' => $name,
+			'type'       => 'dropdown',
+			'value'      => array(
+				__( 'Left', 'tagdiv-liveblog' )   => 'left',
+				__( 'Center', 'tagdiv-liveblog' ) => 'center',
+				__( 'Right', 'tagdiv-liveblog' )  => 'right',
+			),
+			'std'        => $default,
+			'heading'    => $label,
+			'group'      => $group,
+		);
+	}
+
+	/**
 	 * Load presentation CSS and, on actual liveblog posts, the root relocation script.
 	 *
 	 * @return void
@@ -283,21 +367,20 @@ final class Tagdiv_Liveblog_Plugin {
 	 * @return bool
 	 */
 	public static function is_composer_request() {
-		return class_exists( 'td_util' )
-			&& ( td_util::tdc_is_live_editor_iframe() || td_util::tdc_is_live_editor_ajax() );
+		if ( ! class_exists( 'td_util' ) ) {
+			return false;
+		}
+
+		$iframe = method_exists( 'td_util', 'tdc_is_live_editor_iframe' )
+			&& td_util::tdc_is_live_editor_iframe();
+		$ajax   = method_exists( 'td_util', 'tdc_is_live_editor_ajax' )
+			&& td_util::tdc_is_live_editor_ajax();
+
+		return $iframe || $ajax;
 	}
 
 	/**
 	 * Get the actual Liveblog post ID for this request.
-	 *
-	 * tagDiv Cloud Templates can temporarily make get_queried_object_id() point
-	 * at the template post while rendering the block. Liveblog has already run
-	 * handle_request() at template_redirect priority 9 on public liveblog views,
-	 * so its public static post_id is the authoritative article ID here.
-	 *
-	 * In Composer preview there may be no Liveblog runtime post at all. Returning
-	 * zero is safer than leaking the Cloud Template ID into the frontend fallback
-	 * contract.
 	 *
 	 * @return int
 	 */
