@@ -46,12 +46,6 @@
 	box-shadow: none;
 }
 
-.tdlb-title {
-	margin: 0 0 1em;
-	font: inherit;
-	font-weight: 700;
-}
-
 .tdlb-liveblog #wpcom-liveblog-container,
 .tdlb-liveblog .liveblog-feed {
 	position: relative;
