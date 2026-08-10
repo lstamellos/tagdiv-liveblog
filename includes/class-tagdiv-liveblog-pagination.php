@@ -79,7 +79,9 @@ final class Tagdiv_Liveblog_Pagination {
 	 * the upstream-safe `latest` token is used. This affects only sessions that
 	 * started from a numeric entry fragment.
 	 */
-	var deepLinkSession = /^#\d+$/.test(window.location.hash);
+	var deepLinkMatch = window.location.hash.match(/^#(\d+)$/);
+	var deepLinkEntryId = deepLinkMatch ? deepLinkMatch[1] : '';
+	var deepLinkSession = !!deepLinkEntryId;
 	var deepLinkAnchor = '';
 	var endpointUrl = String(window.liveblog_settings.endpoint_url || '');
 
@@ -191,6 +193,62 @@ final class Tagdiv_Liveblog_Pagination {
 		};
 
 		window.__tdlbEntriesPerPageXhrPatched = true;
+	}
+
+	/*
+	 * Upstream scrolls a jumped-to entry when its React EntryContainer mounts.
+	 * In integrated layouts that scroll can be missed during asynchronous render
+	 * timing, so retain a narrow fallback: while the original numeric fragment is
+	 * still active, wait for the corresponding native entry node and perform the
+	 * same one-shot scrollIntoView(). If native navigation has already cleared the
+	 * fragment, the fallback deliberately does nothing.
+	 */
+	function scrollToDeepLinkEntry() {
+		if (
+			!deepLinkEntryId ||
+			window.location.hash !== '#' + deepLinkEntryId
+		) {
+			return false;
+		}
+
+		var target = document.getElementById('id_' + deepLinkEntryId);
+
+		if (!target || !slot.contains(target)) {
+			return false;
+		}
+
+		var performScroll = function () {
+			if (window.location.hash !== '#' + deepLinkEntryId) {
+				return;
+			}
+
+			target.scrollIntoView({ block: 'start', behavior: 'instant' });
+			window.__tdlbDeepLinkScrolled = deepLinkEntryId;
+		};
+
+		if (typeof window.requestAnimationFrame === 'function') {
+			window.requestAnimationFrame(function () {
+				window.requestAnimationFrame(performScroll);
+			});
+		} else {
+			window.setTimeout(performScroll, 0);
+		}
+
+		return true;
+	}
+
+	if (deepLinkSession && !scrollToDeepLinkEntry() && typeof window.MutationObserver === 'function') {
+		var deepLinkObserver = new window.MutationObserver(function () {
+			if (scrollToDeepLinkEntry()) {
+				deepLinkObserver.disconnect();
+			}
+		});
+
+		deepLinkObserver.observe(slot, { childList: true, subtree: true });
+
+		window.setTimeout(function () {
+			deepLinkObserver.disconnect();
+		}, 10000);
 	}
 
 	/*
