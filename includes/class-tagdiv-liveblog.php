@@ -135,6 +135,16 @@ final class Tagdiv_Liveblog_Plugin {
 			),
 
 			// Archived-state notice.
+			array(
+				'param_name'  => 'archive_notice_text',
+				'type'        => 'textfield',
+				'value'       => 'Η ανταπόκριση έχει ολοκληρωθεί',
+				'std'         => 'Η ανταπόκριση έχει ολοκληρωθεί',
+				'heading'     => __( 'Archived notice text', 'tagdiv-liveblog' ),
+				'description' => __( 'Plain-text message shown above an archived Liveblog on every native pagination page.', 'tagdiv-liveblog' ),
+				'holder'      => 'div',
+				'group'       => __( 'Archived notice', 'tagdiv-liveblog' ),
+			),
 			self::color_param( 'archive_notice_background', __( 'Notice background', 'tagdiv-liveblog' ), 'Archived notice' ),
 			self::color_param( 'archive_notice_text_color', __( 'Notice text color', 'tagdiv-liveblog' ), 'Archived notice' ),
 			self::color_param( 'archive_notice_border_color', __( 'Notice border color', 'tagdiv-liveblog' ), 'Archived notice' ),
@@ -452,7 +462,7 @@ final class Tagdiv_Liveblog_Plugin {
 	}
 
 	/**
-	 * Load presentation CSS and, on actual liveblog posts, the root relocation script.
+	 * Load presentation CSS and, on actual liveblog posts, integration scripts.
 	 *
 	 * @return void
 	 */
@@ -480,6 +490,38 @@ final class Tagdiv_Liveblog_Plugin {
 				TAGDIV_LIVEBLOG_VERSION,
 				true
 			);
+
+			if ( self::current_user_can_manage_liveblog() ) {
+				wp_enqueue_style(
+					'tagdiv-liveblog-management',
+					TAGDIV_LIVEBLOG_URL . 'assets/css/tagdiv-liveblog-management.css',
+					array( 'tagdiv-liveblog' ),
+					TAGDIV_LIVEBLOG_VERSION
+				);
+
+				wp_enqueue_script(
+					'tagdiv-liveblog-management',
+					TAGDIV_LIVEBLOG_URL . 'assets/js/tagdiv-liveblog-management.js',
+					array(),
+					TAGDIV_LIVEBLOG_VERSION,
+					true
+				);
+
+				wp_localize_script(
+					'tagdiv-liveblog-management',
+					'tagdiv_liveblog_management',
+					array(
+						'ajax_url'        => admin_url( 'admin-ajax.php' ),
+						'action'          => 'set_liveblog_state_for_post',
+						'nonce_key'       => WPCOM_Liveblog::NONCE_KEY,
+						'nonce'           => wp_create_nonce( WPCOM_Liveblog::NONCE_ACTION ),
+						'post_id'         => self::get_liveblog_post_id(),
+						'archive_confirm' => __( 'Archive this liveblog?', 'tagdiv-liveblog' ),
+						'working'         => __( 'Updating…', 'tagdiv-liveblog' ),
+						'error'           => __( 'The Liveblog state could not be updated. Please try again.', 'tagdiv-liveblog' ),
+					)
+				);
+			}
 		}
 	}
 
@@ -560,5 +602,31 @@ final class Tagdiv_Liveblog_Plugin {
 	 */
 	public static function is_archived_liveblog_post() {
 		return 'archive' === self::get_liveblog_state();
+	}
+
+	/**
+	 * Whether the current user may change the current Liveblog state.
+	 *
+	 * Prefer the post-scoped capability helper provided by Automattic Liveblog
+	 * 1.12.x. The fallback keeps this adapter usable with older compatible
+	 * releases while still authorising against the specific post.
+	 *
+	 * @return bool
+	 */
+	public static function current_user_can_manage_liveblog() {
+		if ( ! is_user_logged_in() || ! class_exists( 'WPCOM_Liveblog' ) ) {
+			return false;
+		}
+
+		$post_id = self::get_liveblog_post_id();
+		if ( $post_id <= 0 || ! self::is_liveblog_post() ) {
+			return false;
+		}
+
+		if ( method_exists( 'WPCOM_Liveblog', 'current_user_can_edit_liveblog_for_post' ) ) {
+			return (bool) WPCOM_Liveblog::current_user_can_edit_liveblog_for_post( $post_id );
+		}
+
+		return current_user_can( 'edit_post', $post_id );
 	}
 }
