@@ -116,11 +116,9 @@ class td_block_liveblog extends td_block {
 	/**
 	 * Add a CSS color custom property.
 	 *
-	 * tagDiv's color picker supports both hexadecimal and RGBA values. WordPress'
-	 * sanitize_hex_color() therefore cannot be used here because it silently
-	 * drops valid Composer colors that include transparency. safecss_filter_attr()
-	 * validates the declaration using WordPress' CSS allow-list while preserving
-	 * the color syntax produced by tagDiv.
+	 * tagDiv's color picker supports hexadecimal and RGBA values. Global colors
+	 * may also arrive as a simple CSS custom-property reference. Validate only
+	 * those formats rather than accepting arbitrary inline CSS.
 	 *
 	 * @param array<int,string> $variables CSS custom property declarations.
 	 * @param string            $css_name  CSS custom property name.
@@ -128,20 +126,72 @@ class td_block_liveblog extends td_block {
 	 * @return void
 	 */
 	private function add_color_variable( &$variables, $css_name, $att_name ) {
-		$value = trim( (string) $this->get_shortcode_att( $att_name ) );
+		$value = $this->sanitize_color_value( $this->get_shortcode_att( $att_name ) );
+		if ( '' !== $value ) {
+			$variables[] = $css_name . ':' . $value;
+		}
+	}
+
+	/**
+	 * Validate a color value emitted by tagDiv Composer.
+	 *
+	 * @param mixed $value Raw shortcode attribute.
+	 * @return string
+	 */
+	private function sanitize_color_value( $value ) {
+		$value = trim( (string) $value );
 		if ( '' === $value ) {
-			return;
+			return '';
 		}
 
-		$filtered = safecss_filter_attr( 'color:' . $value );
-		if ( ! preg_match( '/^color\s*:\s*(.+?)\s*;?$/i', $filtered, $matches ) ) {
-			return;
+		if ( preg_match( '/^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i', $value ) ) {
+			return $value;
 		}
 
-		$color = trim( $matches[1] );
-		if ( '' !== $color ) {
-			$variables[] = $css_name . ':' . $color;
+		if ( preg_match( '/^#[0-9a-f]{4}(?:[0-9a-f]{4})?$/i', $value ) ) {
+			return $value;
 		}
+
+		if ( preg_match( '/^var\(--[a-z0-9_-]+\)$/i', $value ) ) {
+			return $value;
+		}
+
+		if ( in_array( strtolower( $value ), array( 'transparent', 'currentcolor' ), true ) ) {
+			return $value;
+		}
+
+		if ( preg_match( '/^rgba?\((.+)\)$/i', $value, $matches ) ) {
+			$parts = array_map( 'trim', explode( ',', $matches[1] ) );
+			if ( 3 !== count( $parts ) && 4 !== count( $parts ) ) {
+				return '';
+			}
+
+			for ( $i = 0; $i < 3; $i++ ) {
+				if ( ! preg_match( '/^\d{1,3}$/', $parts[ $i ] ) ) {
+					return '';
+				}
+
+				$channel = (int) $parts[ $i ];
+				if ( $channel < 0 || $channel > 255 ) {
+					return '';
+				}
+			}
+
+			if ( 4 === count( $parts ) ) {
+				if ( ! is_numeric( $parts[3] ) ) {
+					return '';
+				}
+
+				$alpha = (float) $parts[3];
+				if ( $alpha < 0 || $alpha > 1 ) {
+					return '';
+				}
+			}
+
+			return $value;
+		}
+
+		return '';
 	}
 
 	private function add_px_variable( &$variables, $css_name, $att_name ) {
