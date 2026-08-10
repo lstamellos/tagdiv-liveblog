@@ -87,6 +87,7 @@ jobs:
           - stable GitHub Releases provide WordPress update metadata and the exact named installable ZIP asset;
           - release ZIPs are verified against the SHA-256 digest published by GitHub before installation;
           - automatic updates are never forced by the plugin and remain controlled by the user's normal per-plugin WordPress auto-update setting;
+          - existing 0.1.15 installations need a one-time manual installation of 0.1.16 because 0.1.15 predates the repository updater; later stable releases can then be discovered natively;
           - the archived completion message is editable as plain text from the TagDiv Liveblog block, with “Η ανταπόκριση έχει ολοκληρωθεί” as the default;
           - the archived notice remains above the Liveblog feed on every native pagination page and retains its TagDiv typography, color, border, radius, padding, spacing, alignment and text-transform controls;
           - authorised frontend users see “This liveblog is active.” with Archive or “This liveblog is archived.” with Reopen;
