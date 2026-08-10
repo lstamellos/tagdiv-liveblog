@@ -1,0 +1,70 @@
+.tdlb-pagination-load-more .liveblog-pagination,
+.tdlb-pagination-infinite .liveblog-pagination {
+	display: none !important;
+}
+
+.tdlb-loaded-pages:empty {
+	display: none;
+}
+
+.tdlb-loaded-pages .liveblog-feed {
+	position: relative;
+}
+
+.tdlb-loaded-pages .liveblog-entry-tools,
+.tdlb-loaded-pages .liveblog-entry-edit {
+	display: none !important;
+}
+
+.tdlb-pagination-controls {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	margin-top: var(--tdlb-entry-gap, 20px);
+}
+
+.tdlb-load-more {
+	appearance: none;
+	border: 1px solid currentColor;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	line-height: 1.2;
+	cursor: pointer;
+	padding: 0.75em 1.25em;
+}
+
+.tdlb-load-more[hidden],
+.tdlb-pagination-sentinel[hidden] {
+	display: none !important;
+}
+
+.tdlb-load-more:disabled {
+	cursor: progress;
+	opacity: 0.6;
+}
+
+.tdlb-pagination-status {
+	min-height: 1.4em;
+	margin-top: 0.5em;
+	font-size: 0.875em;
+}
+
+.tdlb-pagination-sentinel {
+	width: 100%;
+	height: 1px;
+}
+
+.tdlb-pagination-infinite .tdlb-load-more {
+	display: none;
+}
+
+.tdlb-pagination-infinite.tdlb-pagination-error .tdlb-load-more {
+	display: inline-block;
+}
+
+.tdlb-pagination-infinite.tdlb-pagination-loading .tdlb-pagination-status {
+	display: block;
+}
