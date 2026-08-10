@@ -92,17 +92,22 @@ class td_block_liveblog extends td_block {
 		$classes = preg_replace( '/\btd-pb-border-top\b/', '', $this->get_block_classes() );
 		$classes = trim( preg_replace( '/\s+/', ' ', (string) $classes ) ) . ' tdlb-block';
 
-		$style   = $this->build_css_variables();
-		$title   = sanitize_text_field( (string) $this->get_shortcode_att( 'title' ) );
-		$post_id = Tagdiv_Liveblog_Plugin::get_liveblog_post_id();
+		$style        = $this->build_css_variables();
+		$legacy_title = sanitize_text_field( (string) $this->get_shortcode_att( 'title' ) );
+		$block_title  = $this->get_block_title();
+		$post_id      = Tagdiv_Liveblog_Plugin::get_liveblog_post_id();
 
 		$buffy  = '<div class="' . esc_attr( $classes ) . '">';
 		$buffy .= $this->get_block_css();
-		$buffy .= '<div class="tdlb-liveblog" data-tagdiv-liveblog-slot="1" data-liveblog-post-id="' . esc_attr( (string) absint( $post_id ) ) . '"' . ( $style ? ' style="' . esc_attr( $style ) . '"' : '' ) . '>';
 
-		if ( '' !== $title ) {
-			$buffy .= '<div class="tdlb-title">' . esc_html( $title ) . '</div>';
+		if ( '' !== $block_title ) {
+			$buffy .= '<div class="td-block-title-wrap">' . $block_title . '</div>';
+		} elseif ( '' !== $legacy_title ) {
+			// Backwards compatibility for canary blocks saved before native Header settings were wired up.
+			$buffy .= '<div class="tdlb-title">' . esc_html( $legacy_title ) . '</div>';
 		}
+
+		$buffy .= '<div class="tdlb-liveblog" data-tagdiv-liveblog-slot="1" data-liveblog-post-id="' . esc_attr( (string) absint( $post_id ) ) . '"' . ( $style ? ' style="' . esc_attr( $style ) . '"' : '' ) . '>';
 
 		if ( Tagdiv_Liveblog_Plugin::is_composer_request() ) {
 			$buffy .= $this->render_preview();
@@ -190,14 +195,14 @@ class td_block_liveblog extends td_block {
 		$this->add_px_variable( $variables, '--tdlb-timeline-width', 'timeline_width' );
 		$this->add_px_variable( $variables, '--tdlb-timeline-offset', 'timeline_offset' );
 
-		$show_author   = 'no' !== $this->get_shortcode_att( 'show_author' );
-		$show_avatar   = 'no' !== $this->get_shortcode_att( 'show_avatar' );
-		$show_time     = 'no' !== $this->get_shortcode_att( 'show_timestamp' );
-		$author_meta   = $show_author || $show_avatar;
-		$time_mode     = $this->sanitize_choice( $this->get_shortcode_att( 'time_display' ), array( 'exact', 'relative', 'both' ), 'exact' );
-		$meta_layout   = $this->sanitize_choice( $this->get_shortcode_att( 'meta_layout' ), array( 'stacked', 'inline' ), 'stacked' );
-		$meta_position = $this->sanitize_choice( $this->get_shortcode_att( 'meta_position' ), array( 'top', 'bottom' ), 'top' );
-		$meta_order    = $this->sanitize_choice( $this->get_shortcode_att( 'meta_order' ), array( 'time_author', 'author_time' ), 'time_author' );
+		$show_author    = 'no' !== $this->get_shortcode_att( 'show_author' );
+		$show_avatar    = 'no' !== $this->get_shortcode_att( 'show_avatar' );
+		$show_time      = 'no' !== $this->get_shortcode_att( 'show_timestamp' );
+		$author_meta    = $show_author || $show_avatar;
+		$time_mode      = $this->sanitize_choice( $this->get_shortcode_att( 'time_display' ), array( 'exact', 'relative', 'both' ), 'exact' );
+		$meta_layout    = $this->sanitize_choice( $this->get_shortcode_att( 'meta_layout' ), array( 'stacked', 'inline' ), 'stacked' );
+		$meta_position  = $this->sanitize_choice( $this->get_shortcode_att( 'meta_position' ), array( 'top', 'bottom' ), 'top' );
+		$meta_order     = $this->sanitize_choice( $this->get_shortcode_att( 'meta_order' ), array( 'time_author', 'author_time' ), 'time_author' );
 		$meta_alignment = $this->sanitize_choice( $this->get_shortcode_att( 'meta_alignment' ), array( 'left', 'center', 'right' ), 'left' );
 
 		$variables[] = '--tdlb-show-author:' . ( $show_author ? 'inline-flex' : 'none' );
