@@ -288,6 +288,35 @@ final class Tagdiv_Liveblog_Plugin {
 	}
 
 	/**
+	 * Get the actual Liveblog post ID for this request.
+	 *
+	 * tagDiv Cloud Templates can temporarily make get_queried_object_id() point
+	 * at the template post while rendering the block. Liveblog has already run
+	 * handle_request() at template_redirect priority 9 on public liveblog views,
+	 * so its public static post_id is the authoritative article ID here.
+	 *
+	 * In Composer preview there may be no Liveblog runtime post at all. Returning
+	 * zero is safer than leaking the Cloud Template ID into the frontend fallback
+	 * contract.
+	 *
+	 * @return int
+	 */
+	public static function get_liveblog_post_id() {
+		if ( class_exists( 'WPCOM_Liveblog' ) ) {
+			$post_id = absint( WPCOM_Liveblog::$post_id );
+			if ( $post_id > 0 ) {
+				return $post_id;
+			}
+		}
+
+		if ( self::is_composer_request() ) {
+			return 0;
+		}
+
+		return absint( get_queried_object_id() );
+	}
+
+	/**
 	 * Whether the current singular post is a Liveblog post.
 	 *
 	 * @return bool
@@ -297,7 +326,7 @@ final class Tagdiv_Liveblog_Plugin {
 			return false;
 		}
 
-		$post_id = get_queried_object_id();
+		$post_id = self::get_liveblog_post_id();
 		return $post_id > 0 && WPCOM_Liveblog::is_liveblog_post( $post_id );
 	}
 }
