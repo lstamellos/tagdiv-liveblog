@@ -1,6 +1,6 @@
 <?php
 /**
- * Per-block Liveblog pagination size adapter.
+ * Per-block page-size adapter for Automattic Liveblog's native pagination.
  *
  * @package Tagdiv_Liveblog
  */
@@ -16,119 +16,98 @@ final class Tagdiv_Liveblog_Pagination {
 	/**
 	 * Register hooks.
 	 *
-	 * Newspaper can fire tdc_loaded before or after tdc_init depending on the
-	 * request surface. Register on both lifecycle points so the control is added
-	 * after td_block_liveblog exists in either ordering. register_control() is
-	 * idempotent and returns immediately when the parameter is already present.
-	 *
 	 * @return void
 	 */
 	public static function init() {
-		add_action( 'tdc_init', array( __CLASS__, 'register_control' ), 12 );
-		add_action( 'tdc_loaded', array( __CLASS__, 'register_control' ), 20 );
-
-		add_filter( 'shortcode_atts_td_block_liveblog', array( __CLASS__, 'filter_shortcode_atts' ), 10, 4 );
-		add_filter( 'do_shortcode_tag', array( __CLASS__, 'decorate_block_output' ), 10, 4 );
+		add_action( 'wp_footer', array( __CLASS__, 'attach_runtime_bootstrap' ), 1 );
 		add_filter( 'liveblog_number_of_entries', array( __CLASS__, 'filter_entries_per_page' ), 20 );
 	}
 
 	/**
-	 * Add the entries-per-page setting to the existing tagDiv block.
+	 * Attach the per-block page size immediately before Automattic Liveblog's app.
+	 *
+	 * The Liveblog handle has already been localized by this point, so
+	 * window.liveblog_settings exists before this inline script runs.
 	 *
 	 * @return void
 	 */
-	public static function register_control() {
-		if ( ! class_exists( 'td_api_block' ) || ! is_callable( array( 'td_api_block', 'get_all' ) ) ) {
+	public static function attach_runtime_bootstrap() {
+		if (
+			is_admin()
+			|| ! class_exists( 'Tagdiv_Liveblog_Plugin' )
+			|| ! Tagdiv_Liveblog_Plugin::is_liveblog_post()
+			|| ! wp_script_is( 'liveblog', 'enqueued' )
+		) {
 			return;
 		}
 
-		$blocks = td_api_block::get_all();
-		if ( ! isset( $blocks['td_block_liveblog']['params'] ) || ! is_array( $blocks['td_block_liveblog']['params'] ) ) {
-			return;
-		}
+		$script = <<<'JS'
+(function () {
+	'use strict';
 
-		$params = $blocks['td_block_liveblog']['params'];
+	var slot = document.querySelector('[data-tagdiv-liveblog-slot="1"]');
 
-		foreach ( $params as $param ) {
-			if ( is_array( $param ) && isset( $param['param_name'] ) && 'entries_per_page' === $param['param_name'] ) {
-				return;
+	if (!slot || !window.liveblog_settings) {
+		return;
+	}
+
+	var perPage = parseInt(
+		slot.getAttribute('data-liveblog-entries-per-page') || '20',
+		10
+	);
+
+	if (!perPage || perPage < 1) {
+		perPage = 20;
+	}
+
+	perPage = Math.min(perPage, 100);
+
+	slot.setAttribute('data-liveblog-entries-per-page', String(perPage));
+
+	/*
+	 * Automattic Liveblog copies this object into its Redux config when app.js
+	 * mounts. This inline script runs after wp_localize_script() output but before
+	 * app.js itself.
+	 */
+	window.liveblog_settings.entries_per_page = perPage;
+	window.__tdlbEntriesPerPageBootstrap = true;
+
+	/*
+	 * The REST request independently determines its page size in PHP. Pass the
+	 * same value only on upstream native get-entries requests.
+	 */
+	if (window.XMLHttpRequest && !window.__tdlbEntriesPerPageXhrPatched) {
+		var originalOpen = window.XMLHttpRequest.prototype.open;
+
+		window.XMLHttpRequest.prototype.open = function (method, url) {
+			var args = Array.prototype.slice.call(arguments);
+			var requestUrl = typeof url === 'string' ? url : '';
+
+			if (
+				requestUrl.indexOf('get-entries/') !== -1 &&
+				requestUrl.indexOf('tdlb_per_page=') === -1
+			) {
+				requestUrl +=
+					(requestUrl.indexOf('?') === -1 ? '?' : '&') +
+					'tdlb_per_page=' +
+					encodeURIComponent(String(perPage));
+
+				args[1] = requestUrl;
 			}
-		}
 
-		$params[] = array(
-			'param_name'  => 'entries_per_page',
-			'type'        => 'textfield',
-			'value'       => (string) self::DEFAULT_ENTRIES_PER_PAGE,
-			'std'         => (string) self::DEFAULT_ENTRIES_PER_PAGE,
-			'heading'     => __( 'Entries per page', 'tagdiv-liveblog' ),
-			'description' => __( 'Number of Liveblog entries shown on each native pagination page. Allowed range: 1–100.', 'tagdiv-liveblog' ),
-			'holder'      => 'div',
-			'class'       => 'tdc-textfield-small',
-			'group'       => __( 'Pagination', 'tagdiv-liveblog' ),
-		);
+			return originalOpen.apply(this, args);
+		};
 
-		if ( is_callable( array( 'td_api_block', 'update_key' ) ) ) {
-			td_api_block::update_key( 'td_block_liveblog', 'params', $params );
-		}
+		window.__tdlbEntriesPerPageXhrPatched = true;
+	}
+}());
+JS;
+
+		wp_add_inline_script( 'liveblog', $script, 'before' );
 	}
 
 	/**
-	 * Preserve the adapter attribute even though the base block predates it.
-	 *
-	 * @param array  $out       Sanitized shortcode attributes.
-	 * @param array  $pairs     Registered defaults in the block class.
-	 * @param array  $atts      Raw shortcode attributes.
-	 * @param string $shortcode Shortcode name.
-	 * @return array
-	 */
-	public static function filter_shortcode_atts( $out, $pairs, $atts, $shortcode ) {
-		unset( $pairs, $shortcode );
-
-		$atts = is_array( $atts ) ? $atts : array();
-
-		$out['entries_per_page'] = self::sanitize_entries_per_page(
-			isset( $atts['entries_per_page'] ) ? $atts['entries_per_page'] : self::DEFAULT_ENTRIES_PER_PAGE
-		);
-
-		return $out;
-	}
-
-	/**
-	 * Expose the per-instance page size to the pre-runtime relocation helper.
-	 *
-	 * @param string $output Shortcode output.
-	 * @param string $tag    Shortcode tag.
-	 * @param array  $attr   Raw shortcode attributes.
-	 * @param array  $m      Regex match data.
-	 * @return string
-	 */
-	public static function decorate_block_output( $output, $tag, $attr, $m ) {
-		unset( $m );
-
-		if ( 'td_block_liveblog' !== $tag || ! is_string( $output ) || false === strpos( $output, 'data-tagdiv-liveblog-slot="1"' ) ) {
-			return $output;
-		}
-
-		$attr     = is_array( $attr ) ? $attr : array();
-		$per_page = self::sanitize_entries_per_page(
-			isset( $attr['entries_per_page'] ) ? $attr['entries_per_page'] : self::DEFAULT_ENTRIES_PER_PAGE
-		);
-
-		$replacement = 'data-tagdiv-liveblog-slot="1" data-liveblog-entries-per-page="' . esc_attr( (string) $per_page ) . '"';
-
-		return preg_replace(
-			'/data-tagdiv-liveblog-slot="1"/',
-			$replacement,
-			$output,
-			1
-		);
-	}
-
-	/**
-	 * Apply the block page size to Automattic Liveblog's native paged request.
-	 *
-	 * The relocation helper adds tdlb_per_page only to the upstream get-entries
-	 * request for the current Liveblog. All pagination UI and state remain native.
+	 * Apply the requested page size to Automattic Liveblog's native REST query.
 	 *
 	 * @param int $number Upstream number of entries.
 	 * @return int
@@ -144,13 +123,14 @@ final class Tagdiv_Liveblog_Pagination {
 	}
 
 	/**
-	 * Clamp page size to the range accepted by Liveblog.
+	 * Clamp page size to Liveblog's supported range.
 	 *
 	 * @param mixed $value Raw value.
 	 * @return int
 	 */
 	private static function sanitize_entries_per_page( $value ) {
 		$value = absint( $value );
+
 		if ( $value < 1 ) {
 			$value = self::DEFAULT_ENTRIES_PER_PAGE;
 		}
