@@ -11,7 +11,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 final class Tagdiv_Liveblog_Updater {
 	const UPDATE_URI      = 'https://github.com/lstamellos/tagdiv-liveblog';
-	const API_URL         = 'https://api.github.com/repos/lstamellos/tagdiv-liveblog/releases/latest';
+	const API_BASE        = 'https://api.github.com/repos/lstamellos/tagdiv-liveblog/releases';
+	const API_URL         = self::API_BASE . '/latest';
 	const PLUGIN_SLUG     = 'tagdiv-liveblog';
 	const PLUGIN_BASENAME = 'tagdiv-liveblog/tagdiv-liveblog.php';
 	const CACHE_KEY       = 'tdlb_github_latest_release';
@@ -118,6 +119,10 @@ final class Tagdiv_Liveblog_Updater {
 	/**
 	 * Verify the SHA-256 digest published by GitHub before Core installs our ZIP.
 	 *
+	 * Verification is bound to the version encoded in the exact official release
+	 * URL. This remains correct even if a newer release is published between the
+	 * WordPress update check and the later package download.
+	 *
 	 * @param false|string|WP_Error $reply      Existing short-circuit result.
 	 * @param string                $package    Package URL.
 	 * @param WP_Upgrader           $upgrader   Upgrader instance.
@@ -125,30 +130,26 @@ final class Tagdiv_Liveblog_Updater {
 	 * @return false|string|WP_Error
 	 */
 	public static function verify_release_package( $reply, $package, $upgrader, $hook_extra ) {
-		unset( $upgrader );
+		unset( $upgrader, $hook_extra );
 
 		if ( false !== $reply || ! is_string( $package ) || '' === $package ) {
 			return $reply;
 		}
 
-		$is_our_plugin = isset( $hook_extra['plugin'] ) && self::PLUGIN_BASENAME === $hook_extra['plugin'];
-		if ( ! $is_our_plugin && isset( $hook_extra['plugins'] ) && is_array( $hook_extra['plugins'] ) ) {
-			$is_our_plugin = in_array( self::PLUGIN_BASENAME, $hook_extra['plugins'], true );
-		}
-
-		if ( ! $is_our_plugin ) {
+		$version = self::version_from_package_url( $package );
+		if ( false === $version ) {
 			return false;
 		}
 
-		$release = self::get_latest_release();
-		if ( is_wp_error( $release ) || $package !== $release['package'] ) {
-			return false;
+		$release = self::get_release_by_version( $version );
+		if ( is_wp_error( $release ) ) {
+			return $release;
 		}
 
-		if ( empty( $release['sha256'] ) ) {
+		if ( $package !== $release['package'] || empty( $release['sha256'] ) ) {
 			return new WP_Error(
-				'tdlb_update_digest_missing',
-				__( 'The tagDiv Liveblog update was not installed because the GitHub release has no SHA-256 digest.', 'tagdiv-liveblog' )
+				'tdlb_update_release_mismatch',
+				__( 'The tagDiv Liveblog update was not installed because the package does not match the verified GitHub release asset.', 'tagdiv-liveblog' )
 			);
 		}
 
@@ -172,6 +173,22 @@ final class Tagdiv_Liveblog_Updater {
 		}
 
 		return $tmp_file;
+	}
+
+	/**
+	 * Extract a stable version from this repository's exact release-asset URL.
+	 *
+	 * @param string $package Package URL.
+	 * @return string|false
+	 */
+	private static function version_from_package_url( $package ) {
+		$pattern = '#^https://github\.com/lstamellos/tagdiv-liveblog/releases/download/v(\d+\.\d+\.\d+)/tagdiv-liveblog-\1\.zip$#';
+
+		if ( ! preg_match( $pattern, $package, $matches ) ) {
+			return false;
+		}
+
+		return $matches[1];
 	}
 
 	/**
@@ -204,9 +221,6 @@ final class Tagdiv_Liveblog_Updater {
 	/**
 	 * Get and cache the latest stable GitHub release.
 	 *
-	 * Only a published, non-prerelease release with the exact installable asset
-	 * name and a GitHub-provided SHA-256 digest is accepted.
-	 *
 	 * @param bool $force_refresh Ignore the cached response.
 	 * @return array|WP_Error
 	 */
@@ -218,8 +232,52 @@ final class Tagdiv_Liveblog_Updater {
 			}
 		}
 
+		$release = self::request_release( self::API_URL );
+		if ( ! is_wp_error( $release ) ) {
+			set_site_transient( self::CACHE_KEY, $release, self::CACHE_TTL );
+		}
+
+		return $release;
+	}
+
+	/**
+	 * Fetch one stable release by exact semantic version.
+	 *
+	 * @param string $version Stable semantic version.
+	 * @return array|WP_Error
+	 */
+	private static function get_release_by_version( $version ) {
+		if ( ! preg_match( '/^\d+\.\d+\.\d+$/', $version ) ) {
+			return new WP_Error( 'tdlb_github_release_version', __( 'Invalid tagDiv Liveblog release version.', 'tagdiv-liveblog' ) );
+		}
+
+		$cache_key = 'tdlb_github_release_' . md5( $version );
+		$cached    = get_site_transient( $cache_key );
+		if ( is_array( $cached ) && isset( $cached['version'] ) && $version === $cached['version'] ) {
+			return $cached;
+		}
+
+		$release = self::request_release( self::API_BASE . '/tags/v' . rawurlencode( $version ), $version );
+		if ( ! is_wp_error( $release ) ) {
+			set_site_transient( $cache_key, $release, self::CACHE_TTL );
+		}
+
+		return $release;
+	}
+
+	/**
+	 * Request and normalize one GitHub release.
+	 *
+	 * Only a published, non-prerelease release with the exact installable asset
+	 * name and a GitHub-provided SHA-256 digest is accepted.
+	 *
+	 * @param string       $url              GitHub release API URL.
+	 * @param string|false $expected_version Optional exact semantic version.
+	 * @return array|WP_Error
+	 */
+	private static function request_release( $url, $expected_version = false ) {
 		$response = wp_remote_get(
-			self::API_URL,
+			$url,
 			array(
 				'timeout'     => 8,
 				'redirection' => 3,
@@ -253,12 +311,16 @@ final class Tagdiv_Liveblog_Updater {
 		}
 
 		if ( ! empty( $data['draft'] ) || ! empty( $data['prerelease'] ) ) {
-			return new WP_Error( 'tdlb_github_release_unstable', __( 'The latest GitHub release is not a stable published release.', 'tagdiv-liveblog' ) );
+			return new WP_Error( 'tdlb_github_release_unstable', __( 'The GitHub release is not a stable published release.', 'tagdiv-liveblog' ) );
 		}
 
 		$version = ltrim( trim( (string) $data['tag_name'] ), 'vV' );
 		if ( ! preg_match( '/^\d+\.\d+\.\d+$/', $version ) ) {
-			return new WP_Error( 'tdlb_github_release_version', __( 'The latest GitHub release tag is not a stable semantic version.', 'tagdiv-liveblog' ) );
+			return new WP_Error( 'tdlb_github_release_version', __( 'The GitHub release tag is not a stable semantic version.', 'tagdiv-liveblog' ) );
+		}
+
+		if ( false !== $expected_version && $version !== $expected_version ) {
+			return new WP_Error( 'tdlb_github_release_version_mismatch', __( 'GitHub returned a different tagDiv Liveblog version than requested.', 'tagdiv-liveblog' ) );
 		}
 
 		$expected_asset = 'tagdiv-liveblog-' . $version . '.zip';
@@ -291,11 +353,11 @@ final class Tagdiv_Liveblog_Updater {
 		if ( '' === $package || '' === $sha256 ) {
 			return new WP_Error(
 				'tdlb_github_release_asset',
-				__( 'The latest GitHub release does not contain the expected verified tagDiv Liveblog ZIP asset.', 'tagdiv-liveblog' )
+				__( 'The GitHub release does not contain the expected verified tagDiv Liveblog ZIP asset.', 'tagdiv-liveblog' )
 			);
 		}
 
-		$release = array(
+		return array(
 			'version'      => $version,
 			'package'      => $package,
 			'sha256'       => $sha256,
@@ -303,9 +365,5 @@ final class Tagdiv_Liveblog_Updater {
 			'body'         => isset( $data['body'] ) ? (string) $data['body'] : '',
 			'published_at' => isset( $data['published_at'] ) ? sanitize_text_field( $data['published_at'] ) : '',
 		);
-
-		set_site_transient( self::CACHE_KEY, $release, self::CACHE_TTL );
-
-		return $release;
 	}
 }
