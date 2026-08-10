@@ -3,7 +3,7 @@
  * Plugin Name:       tagDiv Liveblog
  * Plugin URI:        https://github.com/lstamellos/tagdiv-liveblog
  * Description:       Integrates Automattic Liveblog with Newspaper/tagDiv Composer as a native configurable block.
- * Version:           0.1.15-rc3
+ * Version:           0.1.15
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            Loukas Stamellos
@@ -15,10 +15,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'TAGDIV_LIVEBLOG_VERSION', '0.1.15-rc3' );
+define( 'TAGDIV_LIVEBLOG_VERSION', '0.1.15' );
 define( 'TAGDIV_LIVEBLOG_FILE', __FILE__ );
 define( 'TAGDIV_LIVEBLOG_PATH', plugin_dir_path( __FILE__ ) );
-define( 'TAGDIV_LIVEBLOG_URL', plugin_dir_url( __FILE__ ) );
+define( 'TAGDIV_LIVEBLOG_URL', plugin_dir_url( __FILE__ );
 
 require_once TAGDIV_LIVEBLOG_PATH . 'includes/class-tagdiv-liveblog.php';
 require_once TAGDIV_LIVEBLOG_PATH . 'includes/class-tagdiv-liveblog-pagination.php';
