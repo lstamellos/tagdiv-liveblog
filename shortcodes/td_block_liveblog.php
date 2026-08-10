@@ -24,53 +24,70 @@ class td_block_liveblog extends td_block {
 
 		$this->shortcode_atts = shortcode_atts(
 			array(
-				'entries_per_page'     => '20',
-				'show_author'          => 'yes',
-				'show_avatar'          => 'yes',
-				'show_timestamp'       => 'yes',
-				'time_display'         => 'exact',
-				'meta_layout'          => 'stacked',
-				'meta_position'        => 'top',
-				'meta_order'           => 'time_author',
-				'meta_alignment'       => 'left',
-				'meta_separator'       => '',
-				'timestamp_prefix'     => '',
-				'author_prefix'        => '',
-				'meta_stack_gap'       => '12',
-				'meta_inline_gap'      => '8',
-				'meta_background'      => '',
-				'meta_text_color'      => '',
-				'meta_padding'         => '0',
-				'meta_gap'             => '8',
-				'entry_background'     => '',
-				'entry_text_color'     => '',
-				'entry_border_color'   => '',
-				'entry_border_width'   => '0',
-				'entry_radius'         => '0',
-				'entry_padding'        => '16',
-				'entry_gap'            => '20',
-				'content_background'   => '',
-				'content_text_color'   => '',
-				'content_border_color' => '',
-				'content_border_width' => '0',
-				'content_border_style' => 'solid',
-				'content_radius'       => '0',
-				'content_padding'      => '0',
-				'timeline'             => 'no',
-				'timeline_color'       => '',
-				'timeline_width'       => '2',
-				'timeline_offset'      => '10',
+				'entries_per_page'             => '20',
+				'archive_notice_background'     => '',
+				'archive_notice_text_color'     => '',
+				'archive_notice_border_color'   => '',
+				'archive_notice_border_width'   => '1',
+				'archive_notice_border_style'   => 'solid',
+				'archive_notice_radius'         => '0',
+				'archive_notice_padding'        => '12',
+				'archive_notice_margin_bottom'  => '20',
+				'archive_notice_font_size'      => '16',
+				'archive_notice_line_height'    => '24',
+				'archive_notice_font_weight'    => '600',
+				'archive_notice_letter_spacing' => '0',
+				'archive_notice_font_style'     => 'normal',
+				'archive_notice_text_align'     => 'left',
+				'archive_notice_text_transform' => 'none',
+				'show_author'                   => 'yes',
+				'show_avatar'                   => 'yes',
+				'show_timestamp'                => 'yes',
+				'time_display'                  => 'exact',
+				'meta_layout'                   => 'stacked',
+				'meta_position'                 => 'top',
+				'meta_order'                    => 'time_author',
+				'meta_alignment'                => 'left',
+				'meta_separator'                => '',
+				'timestamp_prefix'              => '',
+				'author_prefix'                 => '',
+				'meta_stack_gap'                => '12',
+				'meta_inline_gap'               => '8',
+				'meta_background'               => '',
+				'meta_text_color'               => '',
+				'meta_padding'                  => '0',
+				'meta_gap'                      => '8',
+				'entry_background'              => '',
+				'entry_text_color'              => '',
+				'entry_border_color'            => '',
+				'entry_border_width'            => '0',
+				'entry_radius'                  => '0',
+				'entry_padding'                 => '16',
+				'entry_gap'                     => '20',
+				'content_background'            => '',
+				'content_text_color'            => '',
+				'content_border_color'          => '',
+				'content_border_width'          => '0',
+				'content_border_style'          => 'solid',
+				'content_radius'                => '0',
+				'content_padding'               => '0',
+				'timeline'                      => 'no',
+				'timeline_color'                => '',
+				'timeline_width'                => '2',
+				'timeline_offset'               => '10',
 			),
 			$raw_atts,
 			'td_block_liveblog'
 		);
+
+		$is_composer = Tagdiv_Liveblog_Plugin::is_composer_request();
 
 		/*
 		 * A Global Single template may contain this block for every article.
 		 * Keep the Composer preview available while emitting no frontend wrapper,
 		 * header, spacing or slot at all for posts that are not Liveblog posts.
 		 */
-		if ( ! Tagdiv_Liveblog_Plugin::is_composer_request() && ! Tagdiv_Liveblog_Plugin::is_liveblog_post() ) {
+		if ( ! $is_composer && ! Tagdiv_Liveblog_Plugin::is_liveblog_post() ) {
 			return '';
 		}
 
@@ -101,7 +118,18 @@ class td_block_liveblog extends td_block {
 
 		$buffy .= '<div class="tdlb-liveblog" data-tagdiv-liveblog-slot="1" data-liveblog-post-id="' . esc_attr( (string) absint( $post_id ) ) . '" data-liveblog-entries-per-page="' . esc_attr( (string) $entries_per_page ) . '"' . ( $style ? ' style="' . esc_attr( $style ) . '"' : '' ) . '>';
 
-		if ( Tagdiv_Liveblog_Plugin::is_composer_request() ) {
+		/*
+		 * Keep the archived-state message outside Liveblog's React feed. Native
+		 * pagination replaces the feed entries but leaves this notice untouched,
+		 * so it remains at the top on every page. In Composer it is always shown as
+		 * a styling preview; on the frontend it exists only for archive state.
+		 */
+		if ( $is_composer || Tagdiv_Liveblog_Plugin::is_archived_liveblog_post() ) {
+			$preview_attribute = $is_composer ? ' data-tdlb-archive-notice-preview="1"' : '';
+			$buffy            .= '<div class="tdlb-archive-notice"' . $preview_attribute . '>' . esc_html( $this->get_archive_notice_text( $post_id ) ) . '</div>';
+		}
+
+		if ( $is_composer ) {
 			$buffy .= $this->render_preview();
 		}
 
@@ -112,12 +140,68 @@ class td_block_liveblog extends td_block {
 	}
 
 	/**
+	 * Archived-state notice text.
+	 *
+	 * @param int $post_id Liveblog post ID.
+	 * @return string
+	 */
+	private function get_archive_notice_text( $post_id ) {
+		$message = __( 'Η ανταπόκριση έχει ολοκληρωθεί', 'tagdiv-liveblog' );
+
+		/**
+		 * Filter the archived Liveblog notice text.
+		 *
+		 * @param string $message Notice text.
+		 * @param int    $post_id Liveblog post ID.
+		 */
+		$message = apply_filters( 'tagdiv_liveblog_archive_notice_text', $message, absint( $post_id ) );
+
+		return wp_strip_all_tags( (string) $message );
+	}
+
+	/**
 	 * Build per-instance CSS custom properties from Composer controls.
 	 *
 	 * @return string
 	 */
 	private function build_css_variables() {
 		$variables = array();
+
+		$this->add_color_variable( $variables, '--tdlb-archive-notice-bg', 'archive_notice_background' );
+		$this->add_color_variable( $variables, '--tdlb-archive-notice-color', 'archive_notice_text_color' );
+		$this->add_color_variable( $variables, '--tdlb-archive-notice-border-color', 'archive_notice_border_color' );
+		$this->add_px_variable( $variables, '--tdlb-archive-notice-border-width', 'archive_notice_border_width' );
+		$this->add_px_variable( $variables, '--tdlb-archive-notice-radius', 'archive_notice_radius' );
+		$this->add_px_variable( $variables, '--tdlb-archive-notice-padding', 'archive_notice_padding' );
+		$this->add_px_variable( $variables, '--tdlb-archive-notice-margin-bottom', 'archive_notice_margin_bottom' );
+		$this->add_px_variable( $variables, '--tdlb-archive-notice-font-size', 'archive_notice_font_size' );
+		$this->add_px_variable( $variables, '--tdlb-archive-notice-line-height', 'archive_notice_line_height' );
+		$this->add_px_variable( $variables, '--tdlb-archive-notice-letter-spacing', 'archive_notice_letter_spacing' );
+		$variables[] = '--tdlb-archive-notice-border-style:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'archive_notice_border_style' ),
+			array( 'solid', 'dashed', 'dotted', 'double', 'none' ),
+			'solid'
+		);
+		$variables[] = '--tdlb-archive-notice-font-weight:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'archive_notice_font_weight' ),
+			array( '400', '500', '600', '700', '800' ),
+			'600'
+		);
+		$variables[] = '--tdlb-archive-notice-font-style:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'archive_notice_font_style' ),
+			array( 'normal', 'italic' ),
+			'normal'
+		);
+		$variables[] = '--tdlb-archive-notice-text-align:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'archive_notice_text_align' ),
+			array( 'left', 'center', 'right' ),
+			'left'
+		);
+		$variables[] = '--tdlb-archive-notice-text-transform:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'archive_notice_text_transform' ),
+			array( 'none', 'uppercase', 'lowercase', 'capitalize' ),
+			'none'
+		);
 
 		$this->add_color_variable( $variables, '--tdlb-entry-bg', 'entry_background' );
 		$this->add_color_variable( $variables, '--tdlb-entry-color', 'entry_text_color' );
