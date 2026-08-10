@@ -16,6 +16,7 @@
 	--tdlb-timeline-color: currentColor;
 	--tdlb-timeline-width: 2px;
 	--tdlb-timeline-offset: 10px;
+	--tdlb-timeline-gutter: 0px;
 	--tdlb-show-author: inline-flex;
 	--tdlb-show-avatar: inline-flex;
 	--tdlb-show-timestamp: block;
@@ -37,16 +38,19 @@
 }
 
 /*
- * Liveblog 1.12+ renders entries through React inside .liveblog-feed. Keep the
- * connector independent of individual entries so new/polled entries inherit it
- * automatically. A positive z-index keeps the line visible over entry
- * backgrounds without interfering with pointer events.
+ * Reserve a real gutter for the connector. This keeps the timeline beside the
+ * entries rather than painting over their backgrounds/content.
  */
+.tdlb-liveblog .liveblog-feed {
+	box-sizing: border-box;
+	padding-left: var(--tdlb-timeline-gutter);
+}
+
 .tdlb-liveblog .liveblog-feed::before {
 	content: "";
 	display: var(--tdlb-timeline-display);
 	position: absolute;
-	z-index: 2;
+	z-index: 0;
 	top: 0;
 	bottom: 0;
 	left: var(--tdlb-timeline-offset);
@@ -55,9 +59,17 @@
 	pointer-events: none;
 }
 
+/*
+ * Match Liveblog's own AMP layout model on the regular React frontend: the
+ * timestamp is an aside, while author metadata and entry content occupy the
+ * main column. This avoids the unspaced vertical meta stack seen in canary.
+ */
 .tdlb-liveblog .liveblog-entry {
 	position: relative;
 	z-index: 1;
+	display: flex;
+	align-items: flex-start;
+	column-gap: var(--tdlb-meta-gap);
 	box-sizing: border-box;
 	margin: 0 0 var(--tdlb-entry-gap);
 	padding: var(--tdlb-entry-padding);
@@ -71,10 +83,6 @@
 	margin-bottom: 0;
 }
 
-/*
- * Liveblog React separates the timestamp aside from the authors block. Treat
- * both as metadata surfaces while preserving the upstream DOM and runtime.
- */
 .tdlb-liveblog .liveblog-entry-aside,
 .tdlb-liveblog .liveblog-meta-authors {
 	box-sizing: border-box;
@@ -85,7 +93,15 @@
 
 .tdlb-liveblog .liveblog-entry-aside {
 	display: var(--tdlb-show-timestamp);
+	flex: 0 0 auto;
+	min-width: 70px;
+	margin: 0;
 	padding: var(--tdlb-meta-padding);
+}
+
+.tdlb-liveblog .liveblog-entry-main {
+	flex: 1 1 auto;
+	min-width: 0;
 }
 
 .tdlb-liveblog .liveblog-meta-authors {
@@ -94,7 +110,7 @@
 	align-items: center;
 	justify-content: var(--tdlb-meta-justify);
 	gap: var(--tdlb-meta-gap);
-	margin: 0 0 0.75em;
+	margin: 0 0 var(--tdlb-meta-gap);
 	padding: var(--tdlb-meta-padding);
 }
 
@@ -118,6 +134,20 @@
 	display: var(--tdlb-show-timestamp);
 	color: var(--tdlb-meta-color);
 	text-align: var(--tdlb-meta-align);
+	text-decoration: none;
+}
+
+/*
+ * Liveblog 1.12 renders both relative and formatted absolute time. For
+ * journalistic live coverage the exact time is the useful default; retain the
+ * upstream relative value in the DOM for a future Composer mode control.
+ */
+.tdlb-liveblog .liveblog-meta-time > span:first-child {
+	display: none;
+}
+
+.tdlb-liveblog .liveblog-meta-time > span:last-child {
+	display: block;
 }
 
 .tdlb-liveblog .liveblog-entry-content {
@@ -142,4 +172,14 @@
 	border: 1px solid currentColor;
 	border-radius: 50%;
 	opacity: 0.35;
+}
+
+@media (max-width: 767px) {
+	.tdlb-liveblog .liveblog-entry {
+		column-gap: max(6px, var(--tdlb-meta-gap));
+	}
+
+	.tdlb-liveblog .liveblog-entry-aside {
+		min-width: 58px;
+	}
 }
