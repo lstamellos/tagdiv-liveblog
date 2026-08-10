@@ -80,23 +80,33 @@ jobs:
           cat > dist/release-notes.md <<EOF
           ## tagDiv Liveblog ${VERSION}
 
-          This release completes configurable native Liveblog pagination inside Newspaper / tagDiv Composer and fixes direct numeric entry deep links such as #60819.
+          This release adds native GitHub Releases updates, an editable archived-Liveblog completion notice, and permission-gated frontend Archive / Reopen controls while preserving Automattic Liveblog as the owner of rendering, pagination, permissions and state transitions.
 
           Highlights:
-          - Liveblog entries per page are configurable from the TagDiv block, with a supported range of 1–100 and a default of 20;
-          - the configured page size is applied consistently to both normal native pagination and direct entry deep-link requests;
-          - direct #<entry-id> loads calculate pagination from a current Liveblog anchor instead of stale cached page state;
-          - First / Prev / Next / Last work immediately after a direct entry deep-link load, without waiting for polling or a new-entry notification;
-          - direct entry links scroll to the requested Liveblog entry after the integrated DOM is ready;
-          - numeric entry fragments are removed when native pagination or the native new-entry control leaves the linked-entry context;
-          - Automattic Liveblog remains responsible for rendering, Redux state, polling, REST endpoints and native pagination controls;
-          - no Liveblog fork, template override or React DOM reconstruction is introduced.
+          - this GitHub repository is declared as the WordPress Update URI for tagDiv Liveblog;
+          - stable GitHub Releases provide WordPress update metadata and the exact named installable ZIP asset;
+          - release ZIPs are verified against the SHA-256 digest published by GitHub before installation;
+          - automatic updates are never forced by the plugin and remain controlled by the user's normal per-plugin WordPress auto-update setting;
+          - existing 0.1.15 installations need a one-time manual installation of 0.1.16 because 0.1.15 predates the repository updater; later stable releases can then be discovered natively;
+          - the archived completion message is editable as plain text from the TagDiv Liveblog block, with “Η ανταπόκριση έχει ολοκληρωθεί” as the default;
+          - the archived notice remains above the Liveblog feed on every native pagination page and retains its TagDiv typography, color, border, radius, padding, spacing, alignment and text-transform controls;
+          - authorised frontend users see “This liveblog is active.” with Archive or “This liveblog is archived.” with Reopen;
+          - frontend Archive / Reopen delegates to Automattic Liveblog's existing authenticated set_liveblog_state_for_post action, including its nonce and post-scoped edit permission checks;
+          - Archive maps to upstream state archive and Reopen maps to upstream state enable, followed by a page reload so the native runtime starts in the new state;
+          - active Liveblogs render no archived-notice markup on the public frontend;
+          - the configurable page-size and numeric entry deep-link behavior introduced in 0.1.15 remains unchanged.
 
           Validation:
-          - active Liveblog pagination and polling;
-          - archived Liveblog pagination without polling;
-          - non-default entries-per-page settings;
-          - direct numeric entry links, target scrolling and immediate native pagination;
+          - active and archived Liveblogs;
+          - archived notice persistence across native pagination pages;
+          - editable archived notice text, Composer preview and frontend styling;
+          - permission-gated frontend management controls;
+          - active-to-archive and archive-to-enable state transitions through the upstream Liveblog AJAX handler;
+          - direct numeric entry deep links with archived notice present;
+          - GitHub stable-release discovery and exact release-asset selection;
+          - SHA-256 package verification;
+          - native WordPress per-plugin automatic-update preference remains authoritative;
+          - successful background automatic update in a true DOING_CRON context while the plugin remains active;
           - Global Single Template integration.
 
           Validated on OmniaTV with WordPress 7.0.3, PHP 8.3.6, Newspaper 12.7.7, tagDiv Composer 5.4.6 and Automattic Liveblog 1.12.2.
