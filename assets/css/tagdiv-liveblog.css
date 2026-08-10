@@ -41,6 +41,9 @@
 	--tdlb-author-prefix-content: "";
 	--tdlb-timestamp-prefix-content: "";
 	position: relative;
+	border: 0;
+	outline: 0;
+	box-shadow: none;
 }
 
 .tdlb-title {
