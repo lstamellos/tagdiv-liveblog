@@ -18,7 +18,7 @@
 	--tdlb-timeline-offset: 10px;
 	--tdlb-show-author: inline-flex;
 	--tdlb-show-avatar: inline-flex;
-	--tdlb-show-timestamp: inline-flex;
+	--tdlb-show-timestamp: block;
 	--tdlb-meta-align: left;
 	--tdlb-meta-justify: flex-start;
 	--tdlb-timeline-display: none;
@@ -32,14 +32,21 @@
 }
 
 .tdlb-liveblog #wpcom-liveblog-container,
-.tdlb-liveblog #liveblog-entries {
+.tdlb-liveblog .liveblog-feed {
 	position: relative;
 }
 
-.tdlb-liveblog #liveblog-entries::before {
+/*
+ * Liveblog 1.12+ renders entries through React inside .liveblog-feed. Keep the
+ * connector independent of individual entries so new/polled entries inherit it
+ * automatically. A positive z-index keeps the line visible over entry
+ * backgrounds without interfering with pointer events.
+ */
+.tdlb-liveblog .liveblog-feed::before {
 	content: "";
 	display: var(--tdlb-timeline-display);
 	position: absolute;
+	z-index: 2;
 	top: 0;
 	bottom: 0;
 	left: var(--tdlb-timeline-offset);
@@ -50,6 +57,7 @@
 
 .tdlb-liveblog .liveblog-entry {
 	position: relative;
+	z-index: 1;
 	box-sizing: border-box;
 	margin: 0 0 var(--tdlb-entry-gap);
 	padding: var(--tdlb-entry-padding);
@@ -63,48 +71,67 @@
 	margin-bottom: 0;
 }
 
-.tdlb-liveblog .liveblog-meta {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: var(--tdlb-meta-justify);
-	gap: var(--tdlb-meta-gap);
+/*
+ * Liveblog React separates the timestamp aside from the authors block. Treat
+ * both as metadata surfaces while preserving the upstream DOM and runtime.
+ */
+.tdlb-liveblog .liveblog-entry-aside,
+.tdlb-liveblog .liveblog-meta-authors {
 	box-sizing: border-box;
-	margin: 0 0 0.75em;
-	padding: var(--tdlb-meta-padding);
 	color: var(--tdlb-meta-color);
 	background: var(--tdlb-meta-bg);
 	text-align: var(--tdlb-meta-align);
 }
 
-.tdlb-liveblog .liveblog-author-avatar {
+.tdlb-liveblog .liveblog-entry-aside {
+	display: var(--tdlb-show-timestamp);
+	padding: var(--tdlb-meta-padding);
+}
+
+.tdlb-liveblog .liveblog-meta-authors {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: var(--tdlb-meta-justify);
+	gap: var(--tdlb-meta-gap);
+	margin: 0 0 0.75em;
+	padding: var(--tdlb-meta-padding);
+}
+
+.tdlb-liveblog .liveblog-meta-author {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--tdlb-meta-gap);
+}
+
+.tdlb-liveblog .liveblog-meta-author-avatar {
 	display: var(--tdlb-show-avatar);
 	align-items: center;
 }
 
-.tdlb-liveblog .liveblog-author-name {
+.tdlb-liveblog .liveblog-meta-author-name {
 	display: var(--tdlb-show-author);
 	align-items: center;
 }
 
-.tdlb-liveblog .liveblog-meta-time,
-.tdlb-liveblog .liveblog-time-update {
+.tdlb-liveblog .liveblog-meta-time {
 	display: var(--tdlb-show-timestamp);
-	align-items: center;
+	color: var(--tdlb-meta-color);
+	text-align: var(--tdlb-meta-align);
 }
 
-.tdlb-liveblog .liveblog-entry-text {
+.tdlb-liveblog .liveblog-entry-content {
 	box-sizing: border-box;
 	padding: var(--tdlb-content-padding);
 	color: var(--tdlb-content-color);
 	background: var(--tdlb-content-bg);
 }
 
-.tdlb-liveblog .liveblog-entry-text > :first-child {
+.tdlb-liveblog .liveblog-entry-content > :first-child {
 	margin-top: 0;
 }
 
-.tdlb-liveblog .liveblog-entry-text > :last-child {
+.tdlb-liveblog .liveblog-entry-content > :last-child {
 	margin-bottom: 0;
 }
 
