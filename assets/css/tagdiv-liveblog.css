@@ -1,4 +1,19 @@
 .tdlb-liveblog {
+	--tdlb-archive-notice-bg: transparent;
+	--tdlb-archive-notice-color: inherit;
+	--tdlb-archive-notice-border-color: currentColor;
+	--tdlb-archive-notice-border-width: 1px;
+	--tdlb-archive-notice-border-style: solid;
+	--tdlb-archive-notice-radius: 0px;
+	--tdlb-archive-notice-padding: 12px;
+	--tdlb-archive-notice-margin-bottom: 20px;
+	--tdlb-archive-notice-font-size: 16px;
+	--tdlb-archive-notice-line-height: 24px;
+	--tdlb-archive-notice-font-weight: 600;
+	--tdlb-archive-notice-letter-spacing: 0px;
+	--tdlb-archive-notice-font-style: normal;
+	--tdlb-archive-notice-text-align: left;
+	--tdlb-archive-notice-text-transform: none;
 	--tdlb-entry-bg: transparent;
 	--tdlb-entry-color: inherit;
 	--tdlb-entry-border-color: currentColor;
@@ -44,6 +59,24 @@
 	border: 0;
 	outline: 0;
 	box-shadow: none;
+}
+
+.tdlb-liveblog .tdlb-archive-notice {
+	box-sizing: border-box;
+	width: 100%;
+	margin: 0 0 var(--tdlb-archive-notice-margin-bottom);
+	padding: var(--tdlb-archive-notice-padding);
+	color: var(--tdlb-archive-notice-color);
+	background: var(--tdlb-archive-notice-bg);
+	border: var(--tdlb-archive-notice-border-width) var(--tdlb-archive-notice-border-style) var(--tdlb-archive-notice-border-color);
+	border-radius: var(--tdlb-archive-notice-radius);
+	font-size: var(--tdlb-archive-notice-font-size);
+	line-height: var(--tdlb-archive-notice-line-height);
+	font-weight: var(--tdlb-archive-notice-font-weight);
+	font-style: var(--tdlb-archive-notice-font-style);
+	letter-spacing: var(--tdlb-archive-notice-letter-spacing);
+	text-align: var(--tdlb-archive-notice-text-align);
+	text-transform: var(--tdlb-archive-notice-text-transform);
 }
 
 .tdlb-liveblog #wpcom-liveblog-container,
