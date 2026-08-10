@@ -74,7 +74,8 @@ final class Tagdiv_Liveblog_Pagination {
 
 	/*
 	 * The REST request independently determines its page size in PHP. Pass the
-	 * same value only on upstream native get-entries requests.
+	 * same block-configured value on upstream native paginated requests, including
+	 * the special entry deep-link jump endpoint.
 	 */
 	if (window.XMLHttpRequest && !window.__tdlbEntriesPerPageXhrPatched) {
 		var originalOpen = window.XMLHttpRequest.prototype.open;
@@ -82,9 +83,12 @@ final class Tagdiv_Liveblog_Pagination {
 		window.XMLHttpRequest.prototype.open = function (method, url) {
 			var args = Array.prototype.slice.call(arguments);
 			var requestUrl = typeof url === 'string' ? url : '';
+			var isNativePaginationRequest =
+				requestUrl.indexOf('get-entries/') !== -1 ||
+				requestUrl.indexOf('jump-to-key-event/') !== -1;
 
 			if (
-				requestUrl.indexOf('get-entries/') !== -1 &&
+				isNativePaginationRequest &&
 				requestUrl.indexOf('tdlb_per_page=') === -1
 			) {
 				requestUrl +=
@@ -100,6 +104,46 @@ final class Tagdiv_Liveblog_Pagination {
 
 		window.__tdlbEntriesPerPageXhrPatched = true;
 	}
+
+	/*
+	 * A numeric fragment is an upstream deep link to one Liveblog entry. Once the
+	 * visitor uses native pagination or merges newly available entries, that deep
+	 * link no longer represents the currently displayed page. Remove only that
+	 * numeric fragment, without reloading or changing Liveblog pagination state.
+	 */
+	function clearEntryDeepLinkHash() {
+		if (
+			!/^#\d+$/.test(window.location.hash) ||
+			!window.history ||
+			typeof window.history.replaceState !== 'function'
+		) {
+			return;
+		}
+
+		window.history.replaceState(
+			window.history.state,
+			document.title,
+			window.location.pathname + window.location.search
+		);
+	}
+
+	document.addEventListener('click', function (event) {
+		var target = event.target;
+
+		if (!target || typeof target.closest !== 'function') {
+			return;
+		}
+
+		var button = target.closest(
+			'.liveblog-pagination-btn, .liveblog-update-btn'
+		);
+
+		if (!button || !slot.contains(button)) {
+			return;
+		}
+
+		clearEntryDeepLinkHash();
+	});
 }());
 JS;
 
