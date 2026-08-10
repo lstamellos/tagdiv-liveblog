@@ -16,9 +16,15 @@ final class Tagdiv_Liveblog_Pagination {
 	/**
 	 * Register hooks.
 	 *
+	 * Newspaper can fire tdc_loaded before or after tdc_init depending on the
+	 * request surface. Register on both lifecycle points so the control is added
+	 * after td_block_liveblog exists in either ordering. register_control() is
+	 * idempotent and returns immediately when the parameter is already present.
+	 *
 	 * @return void
 	 */
 	public static function init() {
+		add_action( 'tdc_init', array( __CLASS__, 'register_control' ), 12 );
 		add_action( 'tdc_loaded', array( __CLASS__, 'register_control' ), 20 );
 
 		add_filter( 'shortcode_atts_td_block_liveblog', array( __CLASS__, 'filter_shortcode_atts' ), 10, 4 );
