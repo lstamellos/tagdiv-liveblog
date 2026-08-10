@@ -80,27 +80,32 @@ jobs:
           cat > dist/release-notes.md <<EOF
           ## tagDiv Liveblog ${VERSION}
 
-          This release adds native GitHub Releases updates and an archived-Liveblog completion notice while preserving Automattic Liveblog as the runtime renderer and paginator.
+          This release adds native GitHub Releases updates, an editable archived-Liveblog completion notice, and permission-gated frontend Archive / Reopen controls while preserving Automattic Liveblog as the owner of rendering, pagination, permissions and state transitions.
 
           Highlights:
           - this GitHub repository is declared as the WordPress Update URI for tagDiv Liveblog;
           - stable GitHub Releases provide WordPress update metadata and the exact named installable ZIP asset;
           - release ZIPs are verified against the SHA-256 digest published by GitHub before installation;
           - automatic updates are never forced by the plugin and remain controlled by the user's normal per-plugin WordPress auto-update setting;
-          - archived Liveblogs display the message “Η ανταπόκριση έχει ολοκληρωθεί” above the Liveblog feed on every native pagination page;
-          - the archived notice remains outside the React feed, so First / Prev / Next / Last continue to be fully native Automattic Liveblog behavior;
-          - the TagDiv block exposes archived-notice typography, colors, border, radius, padding, spacing, alignment and text-transform controls;
-          - active Liveblogs render no archived-notice markup on the frontend;
+          - the archived completion message is editable as plain text from the TagDiv Liveblog block, with “Η ανταπόκριση έχει ολοκληρωθεί” as the default;
+          - the archived notice remains above the Liveblog feed on every native pagination page and retains its TagDiv typography, color, border, radius, padding, spacing, alignment and text-transform controls;
+          - authorised frontend users see “This liveblog is active.” with Archive or “This liveblog is archived.” with Reopen;
+          - frontend Archive / Reopen delegates to Automattic Liveblog's existing authenticated state-change action, including its nonce and post-scoped edit permission checks;
+          - Archive maps to upstream state archive and Reopen maps to upstream state enable, followed by a page reload so the native runtime starts in the new state;
+          - active Liveblogs render no archived-notice markup on the public frontend;
           - the configurable page-size and numeric entry deep-link behavior introduced in 0.1.15 remains unchanged.
 
           Validation:
           - active and archived Liveblogs;
           - archived notice persistence across native pagination pages;
-          - archived notice Composer preview and frontend styling;
+          - editable archived notice text, Composer preview and frontend styling;
+          - permission-gated frontend management controls;
+          - active-to-archive and archive-to-enable state transitions through the upstream Liveblog AJAX handler;
           - direct numeric entry deep links with archived notice present;
           - GitHub stable-release discovery and exact release-asset selection;
           - SHA-256 package verification;
           - native WordPress per-plugin automatic-update preference remains authoritative;
+          - successful background automatic update in a true DOING_CRON context while the plugin remains active;
           - Global Single Template integration.
 
           Validated on OmniaTV with WordPress 7.0.3, PHP 8.3.6, Newspaper 12.7.7, tagDiv Composer 5.4.6 and Automattic Liveblog 1.12.2.
