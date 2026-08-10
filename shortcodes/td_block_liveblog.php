@@ -13,10 +13,6 @@ class td_block_liveblog extends td_block {
 	/**
 	 * Render the block.
 	 *
-	 * On the frontend this block deliberately does not render Liveblog entries.
-	 * Automattic Liveblog keeps ownership of the root container and its runtime;
-	 * our early footer script only relocates that root into this slot.
-	 *
 	 * @param array       $atts    Shortcode attributes.
 	 * @param string|null $content Shortcode content.
 	 * @return string
@@ -24,13 +20,32 @@ class td_block_liveblog extends td_block {
 	public function render( $atts, $content = null ) {
 		parent::render( $atts );
 
+		$raw_atts = is_array( $atts ) ? $atts : array();
+
 		$this->shortcode_atts = shortcode_atts(
 			array(
 				'title'                 => '',
+				'block_background'      => '',
+				'block_border_color'    => '',
+				'block_border_width'    => '0',
+				'block_radius'          => '0',
+				'block_padding'         => '0',
 				'show_author'           => 'yes',
 				'show_avatar'           => 'yes',
+				'author_position'       => 'top',
+				'author_order'          => '2',
+				'author_alignment'      => 'left',
 				'show_timestamp'        => 'yes',
+				'time_display'          => 'exact',
+				'timestamp_position'    => 'top',
+				'timestamp_order'       => '1',
+				'timestamp_alignment'   => 'left',
 				'meta_alignment'        => 'left',
+				'meta_stack_gap'        => '12',
+				'meta_background'       => '',
+				'meta_text_color'       => '',
+				'meta_padding'          => '0',
+				'meta_gap'              => '8',
 				'entry_background'      => '',
 				'entry_text_color'      => '',
 				'entry_border_color'    => '',
@@ -38,10 +53,6 @@ class td_block_liveblog extends td_block {
 				'entry_radius'          => '0',
 				'entry_padding'         => '16',
 				'entry_gap'             => '20',
-				'meta_background'       => '',
-				'meta_text_color'       => '',
-				'meta_padding'          => '0',
-				'meta_gap'              => '8',
 				'content_background'    => '',
 				'content_text_color'    => '',
 				'content_padding'       => '0',
@@ -50,19 +61,20 @@ class td_block_liveblog extends td_block {
 				'timeline_width'        => '2',
 				'timeline_offset'       => '10',
 			),
-			$atts,
+			$raw_atts,
 			'td_block_liveblog'
 		);
 
-		/*
-		 * tagDiv's generic block classes may add td-pb-border-top as a visual
-		 * block-template separator. A Liveblog is a content surface rather than a
-		 * standard news-list block, so that implicit separator is intentionally
-		 * suppressed. Explicit Design Options remain available on the block.
-		 */
-		$classes = preg_replace( '/\btd-pb-border-top\b/', '', $this->get_block_classes() );
-		$classes = trim( preg_replace( '/\s+/', ' ', (string) $classes ) ) . ' tdlb-block';
+		// Preserve the old shared alignment until a saved block explicitly uses
+		// the new author/timestamp-specific alignment controls.
+		if ( ! array_key_exists( 'author_alignment', $raw_atts ) && array_key_exists( 'meta_alignment', $raw_atts ) ) {
+			$this->shortcode_atts['author_alignment'] = $raw_atts['meta_alignment'];
+		}
+		if ( ! array_key_exists( 'timestamp_alignment', $raw_atts ) && array_key_exists( 'meta_alignment', $raw_atts ) ) {
+			$this->shortcode_atts['timestamp_alignment'] = $raw_atts['meta_alignment'];
+		}
 
+		$classes = $this->get_block_classes() . ' tdlb-block';
 		$style   = $this->build_css_variables();
 		$title   = sanitize_text_field( (string) $this->get_shortcode_att( 'title' ) );
 		$post_id = Tagdiv_Liveblog_Plugin::get_liveblog_post_id();
@@ -93,6 +105,12 @@ class td_block_liveblog extends td_block {
 	private function build_css_variables() {
 		$variables = array();
 
+		$this->add_color_variable( $variables, '--tdlb-block-bg', 'block_background' );
+		$this->add_color_variable( $variables, '--tdlb-block-border-color', 'block_border_color' );
+		$this->add_px_variable( $variables, '--tdlb-block-border-width', 'block_border_width' );
+		$this->add_px_variable( $variables, '--tdlb-block-radius', 'block_radius' );
+		$this->add_px_variable( $variables, '--tdlb-block-padding', 'block_padding' );
+
 		$this->add_color_variable( $variables, '--tdlb-entry-bg', 'entry_background' );
 		$this->add_color_variable( $variables, '--tdlb-entry-color', 'entry_text_color' );
 		$this->add_color_variable( $variables, '--tdlb-entry-border-color', 'entry_border_color' );
@@ -100,36 +118,49 @@ class td_block_liveblog extends td_block {
 		$this->add_px_variable( $variables, '--tdlb-entry-radius', 'entry_radius' );
 		$this->add_px_variable( $variables, '--tdlb-entry-padding', 'entry_padding' );
 		$this->add_px_variable( $variables, '--tdlb-entry-gap', 'entry_gap' );
+
 		$this->add_color_variable( $variables, '--tdlb-meta-bg', 'meta_background' );
 		$this->add_color_variable( $variables, '--tdlb-meta-color', 'meta_text_color' );
 		$this->add_px_variable( $variables, '--tdlb-meta-padding', 'meta_padding' );
 		$this->add_px_variable( $variables, '--tdlb-meta-gap', 'meta_gap' );
+		$this->add_px_variable( $variables, '--tdlb-meta-stack-gap', 'meta_stack_gap' );
+
 		$this->add_color_variable( $variables, '--tdlb-content-bg', 'content_background' );
 		$this->add_color_variable( $variables, '--tdlb-content-color', 'content_text_color' );
 		$this->add_px_variable( $variables, '--tdlb-content-padding', 'content_padding' );
+
 		$this->add_color_variable( $variables, '--tdlb-timeline-color', 'timeline_color' );
 		$this->add_px_variable( $variables, '--tdlb-timeline-width', 'timeline_width' );
 		$this->add_px_variable( $variables, '--tdlb-timeline-offset', 'timeline_offset' );
 
-		$timeline_enabled = 'yes' === $this->get_shortcode_att( 'timeline' );
+		$show_author = 'no' !== $this->get_shortcode_att( 'show_author' );
+		$show_avatar = 'no' !== $this->get_shortcode_att( 'show_avatar' );
+		$show_time   = 'no' !== $this->get_shortcode_att( 'show_timestamp' );
+		$time_mode   = $this->sanitize_choice( $this->get_shortcode_att( 'time_display' ), array( 'exact', 'relative', 'both' ), 'exact' );
 
-		$variables[] = '--tdlb-show-author:' . ( 'no' === $this->get_shortcode_att( 'show_author' ) ? 'none' : 'inline-flex' );
-		$variables[] = '--tdlb-show-avatar:' . ( 'no' === $this->get_shortcode_att( 'show_avatar' ) ? 'none' : 'inline-flex' );
-		$variables[] = '--tdlb-show-timestamp:' . ( 'no' === $this->get_shortcode_att( 'show_timestamp' ) ? 'none' : 'block' );
-		$variables[] = '--tdlb-meta-align:' . $this->sanitize_choice( $this->get_shortcode_att( 'meta_alignment' ), array( 'left', 'center', 'right' ), 'left' );
-		$variables[] = '--tdlb-meta-justify:' . $this->alignment_to_flex( $this->get_shortcode_att( 'meta_alignment' ) );
-		$variables[] = '--tdlb-timeline-display:' . ( $timeline_enabled ? 'block' : 'none' );
-		$variables[] = '--tdlb-timeline-gutter:' . ( $timeline_enabled ? 'calc(var(--tdlb-timeline-offset) + var(--tdlb-timeline-width) + 12px)' : '0px' );
+		$variables[] = '--tdlb-show-author:' . ( $show_author ? 'inline-flex' : 'none' );
+		$variables[] = '--tdlb-show-avatar:' . ( $show_avatar ? 'inline-flex' : 'none' );
+		$variables[] = '--tdlb-author-section-display:' . ( $show_author || $show_avatar ? 'flex' : 'none' );
+		$variables[] = '--tdlb-time-section-display:' . ( $show_time ? 'block' : 'none' );
+		$variables[] = '--tdlb-relative-time-display:' . ( $show_time && in_array( $time_mode, array( 'relative', 'both' ), true ) ? 'block' : 'none' );
+		$variables[] = '--tdlb-exact-time-display:' . ( $show_time && in_array( $time_mode, array( 'exact', 'both' ), true ) ? 'block' : 'none' );
+
+		$author_alignment    = $this->sanitize_choice( $this->get_shortcode_att( 'author_alignment' ), array( 'left', 'center', 'right' ), 'left' );
+		$timestamp_alignment = $this->sanitize_choice( $this->get_shortcode_att( 'timestamp_alignment' ), array( 'left', 'center', 'right' ), 'left' );
+
+		$variables[] = '--tdlb-author-align:' . $author_alignment;
+		$variables[] = '--tdlb-author-justify:' . $this->alignment_to_flex( $author_alignment );
+		$variables[] = '--tdlb-timestamp-align:' . $timestamp_alignment;
+		$variables[] = '--tdlb-author-order:' . $this->meta_order( $this->get_shortcode_att( 'author_position' ), $this->get_shortcode_att( 'author_order' ) );
+		$variables[] = '--tdlb-timestamp-order:' . $this->meta_order( $this->get_shortcode_att( 'timestamp_position' ), $this->get_shortcode_att( 'timestamp_order' ) );
+		$variables[] = '--tdlb-content-order:50';
+		$variables[] = '--tdlb-timeline-display:' . ( 'yes' === $this->get_shortcode_att( 'timeline' ) ? 'block' : 'none' );
 
 		return implode( ';', $variables ) . ';';
 	}
 
 	/**
 	 * Add a CSS color custom property.
-	 *
-	 * tagDiv's color picker supports hexadecimal and RGBA values. Global colors
-	 * may also arrive as a simple CSS custom-property reference. Validate only
-	 * those formats rather than accepting arbitrary inline CSS.
 	 *
 	 * @param array<int,string> $variables CSS custom property declarations.
 	 * @param string            $css_name  CSS custom property name.
@@ -205,10 +236,24 @@ class td_block_liveblog extends td_block {
 		return '';
 	}
 
+	/**
+	 * Add a pixel custom property.
+	 *
+	 * @param array<int,string> $variables CSS custom property declarations.
+	 * @param string            $css_name  CSS custom property name.
+	 * @param string            $att_name  Shortcode attribute name.
+	 * @return void
+	 */
 	private function add_px_variable( &$variables, $css_name, $att_name ) {
 		$variables[] = $css_name . ':' . absint( $this->get_shortcode_att( $att_name ) ) . 'px';
 	}
 
+	/**
+	 * Translate alignment to flex justification.
+	 *
+	 * @param mixed $alignment Alignment.
+	 * @return string
+	 */
 	private function alignment_to_flex( $alignment ) {
 		$alignment = $this->sanitize_choice( $alignment, array( 'left', 'center', 'right' ), 'left' );
 		if ( 'center' === $alignment ) {
@@ -220,6 +265,28 @@ class td_block_liveblog extends td_block {
 		return 'flex-start';
 	}
 
+	/**
+	 * Compute flex order for independently positioned metadata.
+	 *
+	 * @param mixed $position top|bottom.
+	 * @param mixed $order    1|2.
+	 * @return int
+	 */
+	private function meta_order( $position, $order ) {
+		$position = $this->sanitize_choice( $position, array( 'top', 'bottom' ), 'top' );
+		$order    = $this->sanitize_choice( (string) $order, array( '1', '2' ), '1' );
+		$base     = 'bottom' === $position ? 60 : 10;
+		return $base + ( '2' === $order ? 10 : 0 );
+	}
+
+	/**
+	 * Sanitize an enum value.
+	 *
+	 * @param mixed         $value   Raw value.
+	 * @param array<string> $allowed Allowed values.
+	 * @param string        $default Default value.
+	 * @return string
+	 */
 	private function sanitize_choice( $value, $allowed, $default ) {
 		$value = sanitize_key( (string) $value );
 		return in_array( $value, $allowed, true ) ? $value : $default;
@@ -227,10 +294,6 @@ class td_block_liveblog extends td_block {
 
 	/**
 	 * Static representative preview for tagDiv Composer.
-	 *
-	 * The markup intentionally mirrors Liveblog 1.12+'s React output rather than
-	 * the legacy PHP single-entry template. This keeps Composer styling behavior
-	 * representative of the public frontend without starting polling/editor code.
 	 *
 	 * @return string
 	 */
