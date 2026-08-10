@@ -25,6 +25,7 @@ class td_block_liveblog extends td_block {
 		$this->shortcode_atts = shortcode_atts(
 			array(
 				'entries_per_page'             => '20',
+				'archive_notice_text'           => 'Η ανταπόκριση έχει ολοκληρωθεί',
 				'archive_notice_background'     => '',
 				'archive_notice_text_color'     => '',
 				'archive_notice_border_color'   => '',
@@ -119,6 +120,15 @@ class td_block_liveblog extends td_block {
 		$buffy .= '<div class="tdlb-liveblog" data-tagdiv-liveblog-slot="1" data-liveblog-post-id="' . esc_attr( (string) absint( $post_id ) ) . '" data-liveblog-entries-per-page="' . esc_attr( (string) $entries_per_page ) . '"' . ( $style ? ' style="' . esc_attr( $style ) . '"' : '' ) . '>';
 
 		/*
+		 * Frontend state management is only a convenience UI. The actual mutation
+		 * is performed by Automattic Liveblog's existing authenticated AJAX handler,
+		 * which repeats the nonce and post-scoped capability checks server-side.
+		 */
+		if ( ! $is_composer && Tagdiv_Liveblog_Plugin::current_user_can_manage_liveblog() ) {
+			$buffy .= $this->render_management_control( Tagdiv_Liveblog_Plugin::get_liveblog_state() );
+		}
+
+		/*
 		 * Keep the archived-state message outside Liveblog's React feed. Native
 		 * pagination replaces the feed entries but leaves this notice untouched,
 		 * so it remains at the top on every page. In Composer it is always shown as
@@ -146,7 +156,10 @@ class td_block_liveblog extends td_block {
 	 * @return string
 	 */
 	private function get_archive_notice_text( $post_id ) {
-		$message = __( 'Η ανταπόκριση έχει ολοκληρωθεί', 'tagdiv-liveblog' );
+		$message = wp_strip_all_tags( trim( (string) $this->get_shortcode_att( 'archive_notice_text' ) ) );
+		if ( '' === $message ) {
+			$message = __( 'Η ανταπόκριση έχει ολοκληρωθεί', 'tagdiv-liveblog' );
+		}
 
 		/**
 		 * Filter the archived Liveblog notice text.
@@ -157,6 +170,34 @@ class td_block_liveblog extends td_block {
 		$message = apply_filters( 'tagdiv_liveblog_archive_notice_text', $message, absint( $post_id ) );
 
 		return wp_strip_all_tags( (string) $message );
+	}
+
+	/**
+	 * Render the context-sensitive frontend Liveblog management status.
+	 *
+	 * @param string|false $state Current Liveblog state.
+	 * @return string
+	 */
+	private function render_management_control( $state ) {
+		if ( 'enable' === $state ) {
+			$status       = __( 'This liveblog is active.', 'tagdiv-liveblog' );
+			$button       = __( 'Archive', 'tagdiv-liveblog' );
+			$target_state = 'archive';
+		} elseif ( 'archive' === $state ) {
+			$status       = __( 'This liveblog is archived.', 'tagdiv-liveblog' );
+			$button       = __( 'Reopen', 'tagdiv-liveblog' );
+			$target_state = 'enable';
+		} else {
+			return '';
+		}
+
+		$out  = '<div class="tdlb-management" data-tdlb-management="1">';
+		$out .= '<span class="tdlb-management-status">' . esc_html( $status ) . '</span>';
+		$out .= '<button type="button" class="tdlb-management-button" data-tdlb-target-state="' . esc_attr( $target_state ) . '">' . esc_html( $button ) . '</button>';
+		$out .= '<span class="tdlb-management-feedback" role="status" aria-live="polite"></span>';
+		$out .= '</div>';
+
+		return $out;
 	}
 
 	/**
