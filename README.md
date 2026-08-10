@@ -13,7 +13,7 @@ Automattic Liveblog continues to own:
 - REST/AJAX endpoints;
 - frontend editing;
 - permissions;
-- lazy loading;
+- native pagination controls;
 - live/archive state.
 
 `tagdiv-liveblog` owns:
@@ -21,6 +21,8 @@ Automattic Liveblog continues to own:
 - the native `Liveblog` element in tagDiv Composer;
 - the desired page/template location;
 - per-element presentation controls;
+- the configured number of entries shown by Automattic Liveblog on each native pagination page;
+- integration glue required for numeric entry deep links inside Newspaper/TagDiv templates;
 - a static Composer preview;
 - scoped CSS for the upstream Liveblog markup.
 
@@ -34,10 +36,11 @@ There is never a second Liveblog runtime or duplicate container, and no entry ma
 
 ## Composer controls
 
-Version 0.1.12 includes:
+Version 0.1.15 includes:
 
 - native TagDiv Header settings (`custom_title`, `custom_url`, block header style);
 - native TagDiv Design Options / CSS settings for the whole block;
+- configurable Liveblog entries per native pagination page, range 1–100, with a default of 20;
 - author, avatar and timestamp visibility;
 - exact, relative or combined timestamp display;
 - stacked or inline metadata layout;
@@ -48,7 +51,21 @@ Version 0.1.12 includes:
 - content background, text, border, radius and padding;
 - optional timeline line rendered behind complete entry boxes.
 
+The plugin does not add its own paginator. First / Prev / Next / Last, polling, page replacement and entry loading remain native Automattic Liveblog behavior.
+
 See [`docs/requirements.md`](docs/requirements.md) for the requirements map and exclusions.
+
+## Entry deep links
+
+Automattic Liveblog uses numeric URL fragments such as `#60819` to open a specific Liveblog entry. In a TagDiv-integrated view, version 0.1.15 keeps that upstream deep-link behavior while making it consistent with the block configuration:
+
+- the deep-link request uses the same entries-per-page value configured in the TagDiv block;
+- pagination page count and page navigation are based on a current Liveblog pagination anchor rather than stale cached page state;
+- the viewport scrolls to the linked entry after the integrated Liveblog DOM is ready;
+- the numeric fragment remains while the linked entry is being viewed;
+- the fragment is removed when the visitor leaves that entry context through native Liveblog pagination or the native new-entry control.
+
+The adapter does not replace Automattic Liveblog Redux state, pagination reducers, polling, rendering or controls.
 
 ## Global Single Template support
 
@@ -63,7 +80,7 @@ The Liveblog block can be placed in a Global Single Cloud Template. On posts wit
 
 ## Validated runtime
 
-Version 0.1.12 was validated on OmniaTV with:
+Version 0.1.15 was validated on OmniaTV with:
 
 - WordPress 7.0.3
 - PHP 8.3.6
@@ -71,7 +88,15 @@ Version 0.1.12 was validated on OmniaTV with:
 - tagDiv Composer 5.4.6
 - Automattic Liveblog 1.12.2
 
-The production Global Single Template gate was verified with one Liveblog slot/container on a Liveblog post and no slot/container on a normal post.
+Validation covered:
+
+- Global Single Template rendering and non-Liveblog gating;
+- configurable native pagination page size;
+- active Liveblog polling;
+- direct numeric entry deep links;
+- immediate First / Prev / Next / Last navigation after a deep-link load;
+- correct deep-link scroll targeting;
+- archived Liveblog deep-link pagination without polling.
 
 ## Release packaging
 
