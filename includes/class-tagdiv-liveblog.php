@@ -82,23 +82,35 @@ final class Tagdiv_Liveblog_Plugin {
 	/**
 	 * Composer control map.
 	 *
-	 * tagDiv's native general array owns the standard CSS / Design Options panel.
-	 * Whole-block background, border, padding, radius, shadow and responsive CSS
-	 * therefore remain native Composer settings rather than parallel controls.
+	 * Newspaper 12.7.7's get_map_block_general_array() contains only the five
+	 * generic block fields; unlike native block registrations it does not append
+	 * either Design Options editor. Mirror the installed native blocks exactly by
+	 * adding both css_editor and tdc_css_editor explicitly after general/custom
+	 * parameters.
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
 	private static function get_block_params() {
-		$custom = self::get_custom_block_params();
+		$params = array();
 
 		if ( is_callable( array( 'td_config', 'get_map_block_general_array' ) ) ) {
 			$general = td_config::get_map_block_general_array();
 			if ( is_array( $general ) ) {
-				return array_merge( $general, $custom );
+				$params = $general;
 			}
 		}
 
-		$custom[] = array(
+		$params = array_merge( $params, self::get_custom_block_params() );
+
+		$params[] = array(
+			'param_name' => 'css',
+			'value'      => '',
+			'type'       => 'css_editor',
+			'heading'    => 'Css',
+			'group'      => 'Design options',
+		);
+
+		$params[] = array(
 			'param_name' => 'tdc_css',
 			'value'      => '',
 			'type'       => 'tdc_css_editor',
@@ -106,7 +118,7 @@ final class Tagdiv_Liveblog_Plugin {
 			'group'      => 'Design options',
 		);
 
-		return $custom;
+		return $params;
 	}
 
 	/**
