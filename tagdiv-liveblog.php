@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 define( 'TAGDIV_LIVEBLOG_VERSION', '0.1.15' );
 define( 'TAGDIV_LIVEBLOG_FILE', __FILE__ );
 define( 'TAGDIV_LIVEBLOG_PATH', plugin_dir_path( __FILE__ ) );
-define( 'TAGDIV_LIVEBLOG_URL', plugin_dir_url( __FILE__ );
+define( 'TAGDIV_LIVEBLOG_URL', plugin_dir_url( __FILE__ ) );
 
 require_once TAGDIV_LIVEBLOG_PATH . 'includes/class-tagdiv-liveblog.php';
 require_once TAGDIV_LIVEBLOG_PATH . 'includes/class-tagdiv-liveblog-pagination.php';
