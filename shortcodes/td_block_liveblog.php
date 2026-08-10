@@ -113,10 +113,34 @@ class td_block_liveblog extends td_block {
 		return implode( ';', $variables ) . ';';
 	}
 
+	/**
+	 * Add a CSS color custom property.
+	 *
+	 * tagDiv's color picker supports both hexadecimal and RGBA values. WordPress'
+	 * sanitize_hex_color() therefore cannot be used here because it silently
+	 * drops valid Composer colors that include transparency. safecss_filter_attr()
+	 * validates the declaration using WordPress' CSS allow-list while preserving
+	 * the color syntax produced by tagDiv.
+	 *
+	 * @param array<int,string> $variables CSS custom property declarations.
+	 * @param string            $css_name  CSS custom property name.
+	 * @param string            $att_name  Shortcode attribute name.
+	 * @return void
+	 */
 	private function add_color_variable( &$variables, $css_name, $att_name ) {
-		$value = sanitize_hex_color( (string) $this->get_shortcode_att( $att_name ) );
-		if ( $value ) {
-			$variables[] = $css_name . ':' . $value;
+		$value = trim( (string) $this->get_shortcode_att( $att_name ) );
+		if ( '' === $value ) {
+			return;
+		}
+
+		$filtered = safecss_filter_attr( 'color:' . $value );
+		if ( ! preg_match( '/^color\s*:\s*(.+?)\s*;?$/i', $filtered, $matches ) ) {
+			return;
+		}
+
+		$color = trim( $matches[1] );
+		if ( '' !== $color ) {
+			$variables[] = $css_name . ':' . $color;
 		}
 	}
 
