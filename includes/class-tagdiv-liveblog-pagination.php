@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class Tagdiv_Liveblog_Pagination {
 	const DEFAULT_ENTRIES_PER_PAGE = 20;
 	const MAX_ENTRIES_PER_PAGE     = 100;
-	const DEFAULT_MODE             = 'infinite';
+	const DEFAULT_MODE             = 'native';
 
 	/**
 	 * Register hooks.
@@ -71,9 +71,9 @@ final class Tagdiv_Liveblog_Pagination {
 				'param_name' => 'pagination_mode',
 				'type'       => 'dropdown',
 				'value'      => array(
-					__( 'Auto load on scroll', 'tagdiv-liveblog' ) => 'infinite',
-					__( 'Load more button', 'tagdiv-liveblog' )    => 'load_more',
 					__( 'Native Prev / Next', 'tagdiv-liveblog' )  => 'native',
+					__( 'Load more button', 'tagdiv-liveblog' )    => 'load_more',
+					__( 'Auto load on scroll', 'tagdiv-liveblog' ) => 'infinite',
 				),
 				'std'        => self::DEFAULT_MODE,
 				'heading'    => __( 'Pagination mode', 'tagdiv-liveblog' ),
