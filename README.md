@@ -83,7 +83,7 @@ For a logged-in user who can edit the specific Liveblog post, the block renders 
 - active: `This liveblog is active.` with an `Archive` button;
 - archived: `This liveblog is archived.` with a `Reopen` button.
 
-The integration does not implement a second state-changing API. The button posts to Automattic Liveblog's existing authenticated `set_liveblog_state_for_post` AJAX action using the upstream REST nonce. Automattic Liveblog repeats its own post-scoped capability and nonce checks before changing state.
+The integration does not implement a second state-changing API. The button posts to Automattic Liveblog's existing authenticated `set_liveblog_state_for_post` AJAX action using the upstream Liveblog nonce. Automattic Liveblog repeats its own post-scoped capability and nonce checks before changing state.
 
 `Archive` maps to upstream state `archive`; `Reopen` maps to upstream state `enable`. Archive requires a confirmation prompt. After a successful upstream state transition, the page reloads so Automattic Liveblog restarts naturally in the new state and owns all editor, polling and rendering changes.
 
@@ -133,7 +133,7 @@ The Liveblog block can be placed in a Global Single Cloud Template. On posts wit
 
 ## Validated runtime
 
-Version 0.1.15 was validated on OmniaTV with:
+Version 0.1.16 was validated on OmniaTV with:
 
 - WordPress 7.0.3
 - PHP 8.3.6
@@ -141,8 +141,10 @@ Version 0.1.15 was validated on OmniaTV with:
 - tagDiv Composer 5.4.6
 - Automattic Liveblog 1.12.2
 
-0.1.16 validation additionally covers:
+Validation covers:
 
+- configurable native entries-per-page pagination;
+- numeric entry deep links, target scrolling and immediate native pagination;
 - no archived notice on active Liveblogs;
 - one archived notice at the top of every native pagination page;
 - editable archived-notice text plus Composer style propagation;
@@ -153,7 +155,8 @@ Version 0.1.15 was validated on OmniaTV with:
 - GitHub stable-release discovery and exact named release asset selection;
 - SHA-256 package verification;
 - preservation of the native WordPress per-plugin automatic-update preference;
-- successful background auto-update in a true `DOING_CRON` context while the plugin remains active.
+- successful background auto-update in a true `DOING_CRON` context while the plugin remains active;
+- Global Single Template integration.
 
 ## Release packaging
 
