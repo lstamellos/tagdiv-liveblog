@@ -120,6 +120,8 @@ The updater does **not** force automatic updates. It does not opt the plugin int
 
 GitHub release metadata is cached for six hours to avoid unnecessary API requests.
 
+Existing installations on 0.1.15 require a one-time manual installation of 0.1.16 because 0.1.15 predates this updater. Once 0.1.16 is installed, later stable releases can be discovered through the repository update provider.
+
 ## Global Single Template support
 
 The Liveblog block can be placed in a Global Single Cloud Template. On posts without an active or archived Liveblog state it emits no slot or container. On Liveblog posts it resolves the real article ID and mounts the single upstream Liveblog container in the configured block location.
