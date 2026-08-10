@@ -200,16 +200,23 @@
 	display: var(--tdlb-exact-time-display);
 }
 
-/* Optional character/symbol prefixes. */
-.tdlb-liveblog .liveblog-meta-authors::before {
+/*
+ * Optional character/symbol prefixes stay on the same horizontal line as the
+ * metadata they introduce. The timestamp prefix is a sibling of the internal
+ * time stack, so Relative/Exact/Both can stay vertically arranged. The author
+ * prefix belongs to the first author row rather than the outer authors wrapper.
+ */
+.tdlb-liveblog .liveblog-meta-author:first-child::before {
 	content: var(--tdlb-author-prefix-content);
 	display: inline-block;
+	flex: 0 0 auto;
 	margin-inline-end: 0.35em;
 }
 
-.tdlb-liveblog .liveblog-meta-time::before {
+.tdlb-liveblog .liveblog-entry-aside::before {
 	content: var(--tdlb-timestamp-prefix-content);
 	display: inline-block;
+	flex: 0 0 auto;
 	margin-inline-end: 0.35em;
 }
 
