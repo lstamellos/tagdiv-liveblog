@@ -73,9 +73,71 @@ final class Tagdiv_Liveblog_Pagination {
 	window.__tdlbEntriesPerPageBootstrap = true;
 
 	/*
+	 * Numeric entry deep links use jump-to-key-event rather than the normal first
+	 * page request. Cached HTML can contain an old latest_entry_id/timestamp, so
+	 * capture a fresh native pagination anchor in parallel. Until it is available,
+	 * the upstream-safe `latest` token is used. This affects only sessions that
+	 * started from a numeric entry fragment.
+	 */
+	var deepLinkSession = /^#\d+$/.test(window.location.hash);
+	var deepLinkAnchor = '';
+	var endpointUrl = String(window.liveblog_settings.endpoint_url || '');
+
+	if (deepLinkSession && endpointUrl && typeof window.fetch === 'function') {
+		var anchorUrl = endpointUrl + 'get-entries/1/latest';
+		anchorUrl +=
+			(anchorUrl.indexOf('?') === -1 ? '?' : '&') +
+			'tdlb_per_page=' +
+			encodeURIComponent(String(perPage));
+
+		window.fetch(anchorUrl, { credentials: 'same-origin' })
+			.then(function (response) {
+				return response.ok ? response.json() : null;
+			})
+			.then(function (payload) {
+				var latestEntry =
+					payload && payload.entries && payload.entries.length
+						? payload.entries[0]
+						: null;
+
+				if (
+					latestEntry &&
+					latestEntry.id &&
+					latestEntry.timestamp
+				) {
+					deepLinkAnchor =
+						String(latestEntry.id) + '-' + String(latestEntry.timestamp);
+					window.__tdlbDeepLinkAnchor = deepLinkAnchor;
+				}
+			})
+			.catch(function () {
+				/* Native `latest` fallback remains sufficient for navigation. */
+			});
+	}
+
+	function replaceLastKnownEntry(requestUrl, anchor) {
+		if (!anchor) {
+			return requestUrl;
+		}
+
+		requestUrl = requestUrl.replace(
+			/(jump-to-key-event\/\d+\/)[^/?]+/,
+			'$1' + anchor
+		);
+
+		requestUrl = requestUrl.replace(
+			/(get-entries\/\d+\/)[^/?]+/,
+			'$1' + anchor
+		);
+
+		return requestUrl;
+	}
+
+	/*
 	 * The REST request independently determines its page size in PHP. Pass the
-	 * same block-configured value on upstream native paginated requests, including
-	 * the special entry deep-link jump endpoint.
+	 * same block-configured value on upstream native paginated requests. For a
+	 * numeric deep-link session, also make the jump request use the current full
+	 * dataset and keep subsequent non-first pages on the captured fresh anchor.
 	 */
 	if (window.XMLHttpRequest && !window.__tdlbEntriesPerPageXhrPatched) {
 		var originalOpen = window.XMLHttpRequest.prototype.open;
@@ -83,9 +145,35 @@ final class Tagdiv_Liveblog_Pagination {
 		window.XMLHttpRequest.prototype.open = function (method, url) {
 			var args = Array.prototype.slice.call(arguments);
 			var requestUrl = typeof url === 'string' ? url : '';
-			var isNativePaginationRequest =
-				requestUrl.indexOf('get-entries/') !== -1 ||
-				requestUrl.indexOf('jump-to-key-event/') !== -1;
+			var isJumpRequest = requestUrl.indexOf('jump-to-key-event/') !== -1;
+			var pageMatch = requestUrl.match(/get-entries\/(\d+)\//);
+			var isEntriesRequest = !!pageMatch;
+			var isNativePaginationRequest = isJumpRequest || isEntriesRequest;
+
+			if (deepLinkSession && isJumpRequest) {
+				requestUrl = replaceLastKnownEntry(requestUrl, 'latest');
+			}
+
+			if (deepLinkSession && isEntriesRequest) {
+				var requestedPage = parseInt(pageMatch[1], 10);
+				var requestAnchor =
+					requestedPage === 1 ? 'latest' : deepLinkAnchor || 'latest';
+
+				requestUrl = replaceLastKnownEntry(requestUrl, requestAnchor);
+
+				if (requestedPage === 1 && typeof this.addEventListener === 'function') {
+					var xhr = this;
+					xhr.addEventListener(
+						'load',
+						function () {
+							if (xhr.status >= 200 && xhr.status < 300) {
+								deepLinkSession = false;
+							}
+						},
+						{ once: true }
+					);
+				}
+			}
 
 			if (
 				isNativePaginationRequest &&
@@ -95,9 +183,9 @@ final class Tagdiv_Liveblog_Pagination {
 					(requestUrl.indexOf('?') === -1 ? '?' : '&') +
 					'tdlb_per_page=' +
 					encodeURIComponent(String(perPage));
-
-				args[1] = requestUrl;
 			}
+
+			args[1] = requestUrl;
 
 			return originalOpen.apply(this, args);
 		};
