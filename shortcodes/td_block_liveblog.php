@@ -76,6 +76,15 @@ class td_block_liveblog extends td_block {
 		$this->migrate_legacy_meta_atts( $raw_atts );
 
 		/*
+		 * A Global Single template may contain this block for every article.
+		 * Keep the Composer preview available while emitting no frontend wrapper,
+		 * title, spacing or slot at all for posts that are not Liveblog posts.
+		 */
+		if ( ! Tagdiv_Liveblog_Plugin::is_composer_request() && ! Tagdiv_Liveblog_Plugin::is_liveblog_post() ) {
+			return '';
+		}
+
+		/*
 		 * Suppress tagDiv's implicit block-template top separator. The native
 		 * tdc_css / Design Options panel remains fully available and is the
 		 * authoritative whole-block CSS surface.
