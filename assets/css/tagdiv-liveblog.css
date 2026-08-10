@@ -1,4 +1,9 @@
-.tdlb-liveblog {
+.tdlb-block .tdlb-liveblog {
+	--tdlb-block-bg: transparent;
+	--tdlb-block-border-color: currentColor;
+	--tdlb-block-border-width: 0px;
+	--tdlb-block-radius: 0px;
+	--tdlb-block-padding: 0px;
 	--tdlb-entry-bg: transparent;
 	--tdlb-entry-color: inherit;
 	--tdlb-entry-border-color: currentColor;
@@ -10,20 +15,32 @@
 	--tdlb-meta-color: inherit;
 	--tdlb-meta-padding: 0px;
 	--tdlb-meta-gap: 8px;
+	--tdlb-meta-stack-gap: 12px;
 	--tdlb-content-bg: transparent;
 	--tdlb-content-color: inherit;
 	--tdlb-content-padding: 0px;
 	--tdlb-timeline-color: currentColor;
 	--tdlb-timeline-width: 2px;
 	--tdlb-timeline-offset: 10px;
-	--tdlb-timeline-gutter: 0px;
 	--tdlb-show-author: inline-flex;
 	--tdlb-show-avatar: inline-flex;
-	--tdlb-show-timestamp: block;
-	--tdlb-meta-align: left;
-	--tdlb-meta-justify: flex-start;
+	--tdlb-author-section-display: flex;
+	--tdlb-time-section-display: block;
+	--tdlb-relative-time-display: none;
+	--tdlb-exact-time-display: block;
+	--tdlb-author-align: left;
+	--tdlb-author-justify: flex-start;
+	--tdlb-timestamp-align: left;
+	--tdlb-author-order: 20;
+	--tdlb-timestamp-order: 10;
+	--tdlb-content-order: 50;
 	--tdlb-timeline-display: none;
 	position: relative;
+	box-sizing: border-box;
+	padding: var(--tdlb-block-padding);
+	background: var(--tdlb-block-bg);
+	border: var(--tdlb-block-border-width) solid var(--tdlb-block-border-color);
+	border-radius: var(--tdlb-block-radius);
 }
 
 .tdlb-title {
@@ -38,12 +55,12 @@
 }
 
 /*
- * Reserve a real gutter for the connector. This keeps the timeline beside the
- * entries rather than painting over their backgrounds/content.
+ * The connector is painted below the entry boxes, not in a reserved gutter and
+ * not above the cards. This restores the original visual relationship while
+ * keeping the entry surfaces readable and independently configurable.
  */
 .tdlb-liveblog .liveblog-feed {
-	box-sizing: border-box;
-	padding-left: var(--tdlb-timeline-gutter);
+	isolation: isolate;
 }
 
 .tdlb-liveblog .liveblog-feed::before {
@@ -60,16 +77,17 @@
 }
 
 /*
- * Match Liveblog's own AMP layout model on the regular React frontend: the
- * timestamp is an aside, while author metadata and entry content occupy the
- * main column. This avoids the unspaced vertical meta stack seen in canary.
+ * React keeps timestamp and author markup in different DOM branches. The main
+ * wrapper is presentation-transparent so CSS order can place each metadata
+ * section independently above or below content without moving/rebuilding DOM.
  */
 .tdlb-liveblog .liveblog-entry {
 	position: relative;
 	z-index: 1;
 	display: flex;
-	align-items: flex-start;
-	column-gap: var(--tdlb-meta-gap);
+	flex-direction: column;
+	align-items: stretch;
+	row-gap: var(--tdlb-meta-stack-gap);
 	box-sizing: border-box;
 	margin: 0 0 var(--tdlb-entry-gap);
 	padding: var(--tdlb-entry-padding);
@@ -83,35 +101,34 @@
 	margin-bottom: 0;
 }
 
+.tdlb-liveblog .liveblog-entry-main {
+	display: contents;
+}
+
 .tdlb-liveblog .liveblog-entry-aside,
 .tdlb-liveblog .liveblog-meta-authors {
 	box-sizing: border-box;
+	margin: 0;
+	padding: var(--tdlb-meta-padding);
 	color: var(--tdlb-meta-color);
 	background: var(--tdlb-meta-bg);
-	text-align: var(--tdlb-meta-align);
 }
 
 .tdlb-liveblog .liveblog-entry-aside {
-	display: var(--tdlb-show-timestamp);
-	flex: 0 0 auto;
-	min-width: 70px;
-	margin: 0;
-	padding: var(--tdlb-meta-padding);
-}
-
-.tdlb-liveblog .liveblog-entry-main {
-	flex: 1 1 auto;
+	display: var(--tdlb-time-section-display);
+	order: var(--tdlb-timestamp-order);
 	min-width: 0;
+	text-align: var(--tdlb-timestamp-align);
 }
 
 .tdlb-liveblog .liveblog-meta-authors {
-	display: flex;
+	display: var(--tdlb-author-section-display);
+	order: var(--tdlb-author-order);
 	flex-wrap: wrap;
 	align-items: center;
-	justify-content: var(--tdlb-meta-justify);
+	justify-content: var(--tdlb-author-justify);
 	gap: var(--tdlb-meta-gap);
-	margin: 0 0 var(--tdlb-meta-gap);
-	padding: var(--tdlb-meta-padding);
+	text-align: var(--tdlb-author-align);
 }
 
 .tdlb-liveblog .liveblog-meta-author {
@@ -131,30 +148,31 @@
 }
 
 .tdlb-liveblog .liveblog-meta-time {
-	display: var(--tdlb-show-timestamp);
+	display: block;
 	color: var(--tdlb-meta-color);
-	text-align: var(--tdlb-meta-align);
+	text-align: inherit;
 	text-decoration: none;
 }
 
-/*
- * Liveblog 1.12 renders both relative and formatted absolute time. For
- * journalistic live coverage the exact time is the useful default; retain the
- * upstream relative value in the DOM for a future Composer mode control.
- */
 .tdlb-liveblog .liveblog-meta-time > span:first-child {
-	display: none;
+	display: var(--tdlb-relative-time-display);
 }
 
 .tdlb-liveblog .liveblog-meta-time > span:last-child {
-	display: block;
+	display: var(--tdlb-exact-time-display);
 }
 
-.tdlb-liveblog .liveblog-entry-content {
+.tdlb-liveblog .liveblog-entry-content,
+.tdlb-liveblog .liveblog-entry-edit {
+	order: var(--tdlb-content-order);
 	box-sizing: border-box;
 	padding: var(--tdlb-content-padding);
 	color: var(--tdlb-content-color);
 	background: var(--tdlb-content-bg);
+}
+
+.tdlb-liveblog .liveblog-entry-tools {
+	order: 90;
 }
 
 .tdlb-liveblog .liveblog-entry-content > :first-child {
@@ -172,14 +190,4 @@
 	border: 1px solid currentColor;
 	border-radius: 50%;
 	opacity: 0.35;
-}
-
-@media (max-width: 767px) {
-	.tdlb-liveblog .liveblog-entry {
-		column-gap: max(6px, var(--tdlb-meta-gap));
-	}
-
-	.tdlb-liveblog .liveblog-entry-aside {
-		min-width: 58px;
-	}
 }
