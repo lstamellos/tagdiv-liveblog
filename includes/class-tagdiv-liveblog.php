@@ -82,12 +82,6 @@ final class Tagdiv_Liveblog_Plugin {
 	/**
 	 * Composer control map.
 	 *
-	 * Newspaper 12.7.7's get_map_block_general_array() contains only the five
-	 * generic block fields; unlike native block registrations it does not append
-	 * either Design Options editor. Mirror the installed native blocks exactly by
-	 * adding both css_editor and tdc_css_editor explicitly after general/custom
-	 * parameters.
-	 *
 	 * @return array<int,array<string,mixed>>
 	 */
 	private static function get_block_params() {
@@ -124,11 +118,6 @@ final class Tagdiv_Liveblog_Plugin {
 	/**
 	 * Presentation controls owned by this integration.
 	 *
-	 * Header title, URL and block-header style stay owned by TagDiv's native
-	 * General/Header settings. Liveblog ordering, polling, native pagination
-	 * behaviour and administration remain upstream. Only the native page size is
-	 * configurable here.
-	 *
 	 * @return array<int,array<string,mixed>>
 	 */
 	private static function get_custom_block_params() {
@@ -143,6 +132,67 @@ final class Tagdiv_Liveblog_Plugin {
 				'holder'      => 'div',
 				'class'       => 'tdc-textfield-small',
 				'group'       => __( 'General', 'tagdiv-liveblog' ),
+			),
+
+			// Archived-state notice.
+			self::color_param( 'archive_notice_background', __( 'Notice background', 'tagdiv-liveblog' ), 'Archived notice' ),
+			self::color_param( 'archive_notice_text_color', __( 'Notice text color', 'tagdiv-liveblog' ), 'Archived notice' ),
+			self::color_param( 'archive_notice_border_color', __( 'Notice border color', 'tagdiv-liveblog' ), 'Archived notice' ),
+			self::number_param( 'archive_notice_border_width', __( 'Notice border width', 'tagdiv-liveblog' ), 'Archived notice', 1 ),
+			self::choice_param(
+				'archive_notice_border_style',
+				__( 'Notice border style', 'tagdiv-liveblog' ),
+				'Archived notice',
+				array(
+					__( 'Solid', 'tagdiv-liveblog' )  => 'solid',
+					__( 'Dashed', 'tagdiv-liveblog' ) => 'dashed',
+					__( 'Dotted', 'tagdiv-liveblog' ) => 'dotted',
+					__( 'Double', 'tagdiv-liveblog' ) => 'double',
+					__( 'None', 'tagdiv-liveblog' )   => 'none',
+				),
+				'solid'
+			),
+			self::number_param( 'archive_notice_radius', __( 'Notice border radius', 'tagdiv-liveblog' ), 'Archived notice', 0 ),
+			self::number_param( 'archive_notice_padding', __( 'Notice padding', 'tagdiv-liveblog' ), 'Archived notice', 12 ),
+			self::number_param( 'archive_notice_margin_bottom', __( 'Space below notice', 'tagdiv-liveblog' ), 'Archived notice', 20 ),
+			self::number_param( 'archive_notice_font_size', __( 'Notice font size', 'tagdiv-liveblog' ), 'Archived notice', 16 ),
+			self::number_param( 'archive_notice_line_height', __( 'Notice line height', 'tagdiv-liveblog' ), 'Archived notice', 24 ),
+			self::choice_param(
+				'archive_notice_font_weight',
+				__( 'Notice font weight', 'tagdiv-liveblog' ),
+				'Archived notice',
+				array(
+					__( 'Normal (400)', 'tagdiv-liveblog' )     => '400',
+					__( 'Medium (500)', 'tagdiv-liveblog' )     => '500',
+					__( 'Semi-bold (600)', 'tagdiv-liveblog' )  => '600',
+					__( 'Bold (700)', 'tagdiv-liveblog' )       => '700',
+					__( 'Extra-bold (800)', 'tagdiv-liveblog' ) => '800',
+				),
+				'600'
+			),
+			self::number_param( 'archive_notice_letter_spacing', __( 'Notice letter spacing', 'tagdiv-liveblog' ), 'Archived notice', 0 ),
+			self::choice_param(
+				'archive_notice_font_style',
+				__( 'Notice font style', 'tagdiv-liveblog' ),
+				'Archived notice',
+				array(
+					__( 'Normal', 'tagdiv-liveblog' ) => 'normal',
+					__( 'Italic', 'tagdiv-liveblog' ) => 'italic',
+				),
+				'normal'
+			),
+			self::alignment_param( 'archive_notice_text_align', __( 'Notice text alignment', 'tagdiv-liveblog' ), 'Archived notice', 'left' ),
+			self::choice_param(
+				'archive_notice_text_transform',
+				__( 'Notice text transform', 'tagdiv-liveblog' ),
+				'Archived notice',
+				array(
+					__( 'None', 'tagdiv-liveblog' )       => 'none',
+					__( 'Uppercase', 'tagdiv-liveblog' )  => 'uppercase',
+					__( 'Lowercase', 'tagdiv-liveblog' )  => 'lowercase',
+					__( 'Capitalize', 'tagdiv-liveblog' ) => 'capitalize',
+				),
+				'none'
 			),
 
 			// Metadata.
@@ -260,32 +310,32 @@ final class Tagdiv_Liveblog_Plugin {
 			self::color_param( 'content_text_color', __( 'Content text color', 'tagdiv-liveblog' ), 'Content' ),
 			self::color_param( 'content_border_color', __( 'Content border color', 'tagdiv-liveblog' ), 'Content' ),
 			self::number_param( 'content_border_width', __( 'Content border width', 'tagdiv-liveblog' ), 'Content', 0 ),
-			array(
-				'param_name' => 'content_border_style',
-				'type'       => 'dropdown',
-				'value'      => array(
+			self::choice_param(
+				'content_border_style',
+				__( 'Content border style', 'tagdiv-liveblog' ),
+				'Content',
+				array(
 					__( 'Solid', 'tagdiv-liveblog' )  => 'solid',
 					__( 'Dashed', 'tagdiv-liveblog' ) => 'dashed',
 					__( 'Dotted', 'tagdiv-liveblog' ) => 'dotted',
 					__( 'Double', 'tagdiv-liveblog' ) => 'double',
 					__( 'None', 'tagdiv-liveblog' )   => 'none',
 				),
-				'heading'    => __( 'Content border style', 'tagdiv-liveblog' ),
-				'group'      => __( 'Content', 'tagdiv-liveblog' ),
+				'solid'
 			),
 			self::number_param( 'content_radius', __( 'Content border radius', 'tagdiv-liveblog' ), 'Content', 0 ),
 			self::number_param( 'content_padding', __( 'Content padding', 'tagdiv-liveblog' ), 'Content', 0 ),
 
 			// Timeline stays behind complete entry boxes.
-			array(
-				'param_name' => 'timeline',
-				'type'       => 'dropdown',
-				'value'      => array(
+			self::choice_param(
+				'timeline',
+				__( 'Timeline line', 'tagdiv-liveblog' ),
+				'Timeline',
+				array(
 					__( 'Off', 'tagdiv-liveblog' ) => 'no',
 					__( 'On', 'tagdiv-liveblog' )  => 'yes',
 				),
-				'heading'    => __( 'Timeline line', 'tagdiv-liveblog' ),
-				'group'      => __( 'Timeline', 'tagdiv-liveblog' ),
+				'no'
 			),
 			self::color_param( 'timeline_color', __( 'Timeline color', 'tagdiv-liveblog' ), 'Timeline' ),
 			self::number_param( 'timeline_width', __( 'Timeline width', 'tagdiv-liveblog' ), 'Timeline', 2 ),
@@ -330,6 +380,27 @@ final class Tagdiv_Liveblog_Plugin {
 			'holder'      => 'div',
 			'class'       => 'tdc-textfield-small',
 			'description' => __( 'Pixels.', 'tagdiv-liveblog' ),
+		);
+	}
+
+	/**
+	 * Build a dropdown parameter.
+	 *
+	 * @param string               $name    Parameter name.
+	 * @param string               $label   Label.
+	 * @param string               $group   Group.
+	 * @param array<string,string> $values  Display labels mapped to values.
+	 * @param string               $default Default value.
+	 * @return array<string,mixed>
+	 */
+	private static function choice_param( $name, $label, $group, $values, $default ) {
+		return array(
+			'param_name' => $name,
+			'type'       => 'dropdown',
+			'value'      => $values,
+			'std'        => $default,
+			'heading'    => $label,
+			'group'      => $group,
 		);
 	}
 
@@ -451,17 +522,11 @@ final class Tagdiv_Liveblog_Plugin {
 	}
 
 	/**
-	 * Whether the resolved post has an active or archived Liveblog state.
+	 * Get the normalized Liveblog state for the resolved article.
 	 *
-	 * Automattic Liveblog's public get_liveblog_state()/is_liveblog_post() are
-	 * request-context-sensitive and return false when a TagDiv Cloud Template
-	 * temporarily makes is_singular() false, even with an explicit post ID.
-	 * For template visibility only, read the same canonical post meta key after
-	 * resolving the real article ID. Liveblog remains the sole runtime renderer.
-	 *
-	 * @return bool
+	 * @return string|false
 	 */
-	public static function is_liveblog_post() {
+	public static function get_liveblog_state() {
 		if ( ! class_exists( 'WPCOM_Liveblog' ) ) {
 			return false;
 		}
@@ -476,6 +541,24 @@ final class Tagdiv_Liveblog_Plugin {
 			$state = 'enable';
 		}
 
-		return in_array( $state, array( 'enable', 'archive' ), true );
+		return is_string( $state ) ? $state : false;
+	}
+
+	/**
+	 * Whether the resolved post has an active or archived Liveblog state.
+	 *
+	 * @return bool
+	 */
+	public static function is_liveblog_post() {
+		return in_array( self::get_liveblog_state(), array( 'enable', 'archive' ), true );
+	}
+
+	/**
+	 * Whether the resolved post is an archived Liveblog.
+	 *
+	 * @return bool
+	 */
+	public static function is_archived_liveblog_post() {
+		return 'archive' === self::get_liveblog_state();
 	}
 }
