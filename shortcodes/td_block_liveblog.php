@@ -54,7 +54,15 @@ class td_block_liveblog extends td_block {
 			'td_block_liveblog'
 		);
 
-		$classes = $this->get_block_classes() . ' tdlb-block';
+		/*
+		 * tagDiv's generic block classes may add td-pb-border-top as a visual
+		 * block-template separator. A Liveblog is a content surface rather than a
+		 * standard news-list block, so that implicit separator is intentionally
+		 * suppressed. Explicit Design Options remain available on the block.
+		 */
+		$classes = preg_replace( '/\btd-pb-border-top\b/', '', $this->get_block_classes() );
+		$classes = trim( preg_replace( '/\s+/', ' ', (string) $classes ) ) . ' tdlb-block';
+
 		$style   = $this->build_css_variables();
 		$title   = sanitize_text_field( (string) $this->get_shortcode_att( 'title' ) );
 		$post_id = Tagdiv_Liveblog_Plugin::get_liveblog_post_id();
@@ -103,12 +111,15 @@ class td_block_liveblog extends td_block {
 		$this->add_px_variable( $variables, '--tdlb-timeline-width', 'timeline_width' );
 		$this->add_px_variable( $variables, '--tdlb-timeline-offset', 'timeline_offset' );
 
+		$timeline_enabled = 'yes' === $this->get_shortcode_att( 'timeline' );
+
 		$variables[] = '--tdlb-show-author:' . ( 'no' === $this->get_shortcode_att( 'show_author' ) ? 'none' : 'inline-flex' );
 		$variables[] = '--tdlb-show-avatar:' . ( 'no' === $this->get_shortcode_att( 'show_avatar' ) ? 'none' : 'inline-flex' );
 		$variables[] = '--tdlb-show-timestamp:' . ( 'no' === $this->get_shortcode_att( 'show_timestamp' ) ? 'none' : 'block' );
 		$variables[] = '--tdlb-meta-align:' . $this->sanitize_choice( $this->get_shortcode_att( 'meta_alignment' ), array( 'left', 'center', 'right' ), 'left' );
 		$variables[] = '--tdlb-meta-justify:' . $this->alignment_to_flex( $this->get_shortcode_att( 'meta_alignment' ) );
-		$variables[] = '--tdlb-timeline-display:' . ( 'yes' === $this->get_shortcode_att( 'timeline' ) ? 'block' : 'none' );
+		$variables[] = '--tdlb-timeline-display:' . ( $timeline_enabled ? 'block' : 'none' );
+		$variables[] = '--tdlb-timeline-gutter:' . ( $timeline_enabled ? 'calc(var(--tdlb-timeline-offset) + var(--tdlb-timeline-width) + 12px)' : '0px' );
 
 		return implode( ';', $variables ) . ';';
 	}
