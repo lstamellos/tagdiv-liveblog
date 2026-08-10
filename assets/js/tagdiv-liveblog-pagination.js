@@ -101,6 +101,7 @@
 
 		pending = null;
 		setLoading(false);
+		controls.hidden = false;
 		button.textContent = labels.retry || 'Retry loading';
 		button.hidden = false;
 		status.textContent = '';
@@ -109,6 +110,8 @@
 
 	function syncControls() {
 		var state = getPageState();
+		controls.hidden = !state.hasMore;
+
 		if (!state.hasMore) {
 			button.hidden = true;
 			sentinel.hidden = true;
@@ -183,7 +186,7 @@
 		button.addEventListener('click', loadNextPage);
 		syncControls();
 
-		if (mode === 'infinite' && 'IntersectionObserver' in window) {
+		if (mode === 'infinite' && getPageState().hasMore && 'IntersectionObserver' in window) {
 			observer = new IntersectionObserver(function (entries) {
 				entries.forEach(function (entry) {
 					if (entry.isIntersecting) {
@@ -196,7 +199,7 @@
 				threshold: 0
 			});
 			observer.observe(sentinel);
-		} else if (mode === 'infinite') {
+		} else if (mode === 'infinite' && getPageState().hasMore) {
 			// Progressive enhancement: browsers without IntersectionObserver retain
 			// the same batching behaviour through an explicit Load more control.
 			button.hidden = false;
