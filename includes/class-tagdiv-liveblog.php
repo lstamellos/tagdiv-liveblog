@@ -446,16 +446,31 @@ final class Tagdiv_Liveblog_Plugin {
 	}
 
 	/**
-	 * Whether the current singular post is a Liveblog post.
+	 * Whether the resolved post has an active or archived Liveblog state.
+	 *
+	 * Automattic Liveblog's public get_liveblog_state()/is_liveblog_post() are
+	 * request-context-sensitive and return false when a TagDiv Cloud Template
+	 * temporarily makes is_singular() false, even with an explicit post ID.
+	 * For template visibility only, read the same canonical post meta key after
+	 * resolving the real article ID. Liveblog remains the sole runtime renderer.
 	 *
 	 * @return bool
 	 */
 	public static function is_liveblog_post() {
-		if ( ! class_exists( 'WPCOM_Liveblog' ) || ! is_singular() ) {
+		if ( ! class_exists( 'WPCOM_Liveblog' ) ) {
 			return false;
 		}
 
 		$post_id = self::get_liveblog_post_id();
-		return $post_id > 0 && WPCOM_Liveblog::is_liveblog_post( $post_id );
+		if ( $post_id <= 0 ) {
+			return false;
+		}
+
+		$state = get_post_meta( $post_id, WPCOM_Liveblog::KEY, true );
+		if ( 1 === $state || '1' === $state ) {
+			$state = 'enable';
+		}
+
+		return in_array( $state, array( 'enable', 'archive' ), true );
 	}
 }
