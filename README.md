@@ -57,6 +57,14 @@ See [`docs/requirements.md`](docs/requirements.md) for the full requirements map
 - Newspaper / tagDiv Composer with the `td_api_block` API (Newspaper V11+)
 - Automattic Liveblog
 
+## Canary status
+
+OmniaTV runtime compatibility has been verified against WordPress 7.0.3, Newspaper 12.7.7, tagDiv Composer 5.4.6 and Liveblog 1.12.2.
+
+The first Composer canary confirmed that the single native Liveblog root is relocated into the block correctly. Version 0.1.2 fixes color handling discovered during that canary: tagDiv's color picker can emit RGBA values, so presentation colors are validated as tagDiv-compatible color values instead of being restricted to WordPress hex-only colors.
+
+The remaining canary check is to distinguish an empty controlled test Liveblog from a frontend API/runtime failure before changing the relocation mechanism.
+
 ## Status
 
-Early integration scaffold. It should be validated against the exact Newspaper, td-composer and Liveblog versions installed on the target site before production activation.
+Early integration scaffold. Production Single Post templates should not be changed until the Composer and frontend canary checks are complete.
