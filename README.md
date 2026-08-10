@@ -14,7 +14,7 @@ Automattic Liveblog continues to own:
 - frontend editing;
 - permissions;
 - native pagination controls;
-- live/archive state.
+- live/archive state and state transitions.
 
 `tagdiv-liveblog` owns:
 
@@ -23,7 +23,8 @@ Automattic Liveblog continues to own:
 - per-element presentation controls;
 - the configured number of entries shown by Automattic Liveblog on each native pagination page;
 - integration glue required for numeric entry deep links inside Newspaper/TagDiv templates;
-- the archived-state completion notice and its presentation;
+- the archived-state completion notice, its text and its presentation;
+- a permission-gated frontend convenience UI for Archive / Reopen that delegates state changes to Automattic Liveblog;
 - GitHub Releases integration for WordPress plugin updates;
 - a static Composer preview;
 - scoped CSS for the upstream Liveblog markup.
@@ -43,6 +44,7 @@ Version 0.1.16 adds an `Archived notice` control group while retaining the contr
 - native TagDiv Header settings (`custom_title`, `custom_url`, block header style);
 - native TagDiv Design Options / CSS settings for the whole block;
 - configurable Liveblog entries per native pagination page, range 1–100, with a default of 20;
+- editable plain-text archived notice text;
 - archived notice background and text colors;
 - archived notice border color, width, style and radius;
 - archived notice padding and spacing below the notice;
@@ -64,15 +66,28 @@ See [`docs/requirements.md`](docs/requirements.md) for the requirements map and 
 
 ## Archived Liveblog notice
 
-When the resolved Automattic Liveblog state is exactly `archive`, the block renders the notice:
+When the resolved Automattic Liveblog state is exactly `archive`, the block renders the configured archived notice text. The default is:
 
 > Η ανταπόκριση έχει ολοκληρωθεί
 
 The notice is placed inside the TagDiv Liveblog slot but outside Automattic Liveblog's React feed. As a result it remains at the top while native pagination replaces pages of entries. Active Liveblogs do not render archived-notice markup on the frontend.
 
-The TagDiv Composer preview always displays the notice so its appearance can be configured from the `Archived notice` controls before an article is archived.
+The TagDiv Composer preview always displays the notice so its text and appearance can be configured from the `Archived notice` controls before an article is archived.
 
-The default text is intentionally fixed. Developers may override it with the `tagdiv_liveblog_archive_notice_text` filter without changing the pagination or state behavior.
+The Composer value is plain text and is sanitized before output. Developers may still override the resolved text with the `tagdiv_liveblog_archive_notice_text` filter without changing pagination or Liveblog state behavior.
+
+## Frontend Archive / Reopen controls
+
+For a logged-in user who can edit the specific Liveblog post, the block renders a small context-sensitive management status above the Liveblog feed:
+
+- active: `This liveblog is active.` with an `Archive` button;
+- archived: `This liveblog is archived.` with a `Reopen` button.
+
+The integration does not implement a second state-changing API. The button posts to Automattic Liveblog's existing authenticated `set_liveblog_state_for_post` AJAX action using the upstream REST nonce. Automattic Liveblog repeats its own post-scoped capability and nonce checks before changing state.
+
+`Archive` maps to upstream state `archive`; `Reopen` maps to upstream state `enable`. Archive requires a confirmation prompt. After a successful upstream state transition, the page reloads so Automattic Liveblog restarts naturally in the new state and owns all editor, polling and rendering changes.
+
+Users without permission to edit that specific post receive no management markup or management asset on the frontend.
 
 ## Entry deep links
 
@@ -130,11 +145,15 @@ Version 0.1.15 was validated on OmniaTV with:
 
 - no archived notice on active Liveblogs;
 - one archived notice at the top of every native pagination page;
-- archived-notice Composer controls and frontend style propagation;
+- editable archived-notice text plus Composer style propagation;
+- permission-gated frontend Archive / Reopen controls;
+- upstream nonce and post-scoped permission enforcement for frontend state changes;
+- active → archive and archive → enable transitions with page reload;
 - direct entry deep links with the archived notice present;
 - GitHub stable-release discovery and exact named release asset selection;
 - SHA-256 package verification;
-- preservation of the native WordPress per-plugin automatic-update preference.
+- preservation of the native WordPress per-plugin automatic-update preference;
+- successful background auto-update in a true `DOING_CRON` context while the plugin remains active.
 
 ## Release packaging
 
