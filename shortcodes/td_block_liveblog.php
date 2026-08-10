@@ -194,7 +194,7 @@ class td_block_liveblog extends td_block {
 		$variables[] = '--tdlb-show-author:' . ( $show_author ? 'inline-flex' : 'none' );
 		$variables[] = '--tdlb-show-avatar:' . ( $show_avatar ? 'inline-flex' : 'none' );
 		$variables[] = '--tdlb-author-section-display:' . ( $author_meta ? 'flex' : 'none' );
-		$variables[] = '--tdlb-time-section-display:' . ( $show_time ? 'block' : 'none' );
+		$variables[] = '--tdlb-time-section-display:' . ( $show_time ? 'flex' : 'none' );
 		$variables[] = '--tdlb-relative-time-display:' . ( $show_time && in_array( $time_mode, array( 'relative', 'both' ), true ) ? 'block' : 'none' );
 		$variables[] = '--tdlb-exact-time-display:' . ( $show_time && in_array( $time_mode, array( 'exact', 'both' ), true ) ? 'block' : 'none' );
 		$variables[] = '--tdlb-meta-basis:' . ( 'inline' === $meta_layout ? 'auto' : '100%' );
