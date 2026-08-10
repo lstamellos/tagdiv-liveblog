@@ -1,9 +1,4 @@
-.tdlb-block .tdlb-liveblog {
-	--tdlb-block-bg: transparent;
-	--tdlb-block-border-color: currentColor;
-	--tdlb-block-border-width: 0px;
-	--tdlb-block-radius: 0px;
-	--tdlb-block-padding: 0px;
+.tdlb-liveblog {
 	--tdlb-entry-bg: transparent;
 	--tdlb-entry-color: inherit;
 	--tdlb-entry-border-color: currentColor;
@@ -16,8 +11,13 @@
 	--tdlb-meta-padding: 0px;
 	--tdlb-meta-gap: 8px;
 	--tdlb-meta-stack-gap: 12px;
+	--tdlb-meta-inline-gap: 8px;
 	--tdlb-content-bg: transparent;
 	--tdlb-content-color: inherit;
+	--tdlb-content-border-color: currentColor;
+	--tdlb-content-border-width: 0px;
+	--tdlb-content-border-style: solid;
+	--tdlb-content-radius: 0px;
 	--tdlb-content-padding: 0px;
 	--tdlb-timeline-color: currentColor;
 	--tdlb-timeline-width: 2px;
@@ -28,19 +28,19 @@
 	--tdlb-time-section-display: block;
 	--tdlb-relative-time-display: none;
 	--tdlb-exact-time-display: block;
-	--tdlb-author-align: left;
-	--tdlb-author-justify: flex-start;
-	--tdlb-timestamp-align: left;
+	--tdlb-meta-basis: 100%;
+	--tdlb-meta-group-justify: flex-start;
+	--tdlb-meta-text-align: left;
 	--tdlb-author-order: 20;
 	--tdlb-timestamp-order: 10;
 	--tdlb-content-order: 50;
 	--tdlb-timeline-display: none;
+	--tdlb-author-separator-display: none;
+	--tdlb-time-separator-display: none;
+	--tdlb-meta-separator-content: "";
+	--tdlb-author-prefix-content: "";
+	--tdlb-timestamp-prefix-content: "";
 	position: relative;
-	box-sizing: border-box;
-	padding: var(--tdlb-block-padding);
-	background: var(--tdlb-block-bg);
-	border: var(--tdlb-block-border-width) solid var(--tdlb-block-border-color);
-	border-radius: var(--tdlb-block-radius);
 }
 
 .tdlb-title {
@@ -55,9 +55,9 @@
 }
 
 /*
- * The connector is painted below the entry boxes, not in a reserved gutter and
- * not above the cards. This restores the original visual relationship while
- * keeping the entry surfaces readable and independently configurable.
+ * Timeline is the background connector layer. Complete entry boxes sit above
+ * it; opaque entry backgrounds cover the line, while transparent backgrounds
+ * intentionally reveal it according to the user's chosen opacity.
  */
 .tdlb-liveblog .liveblog-feed {
 	isolation: isolate;
@@ -76,17 +76,14 @@
 	pointer-events: none;
 }
 
-/*
- * React keeps timestamp and author markup in different DOM branches. The main
- * wrapper is presentation-transparent so CSS order can place each metadata
- * section independently above or below content without moving/rebuilding DOM.
- */
 .tdlb-liveblog .liveblog-entry {
 	position: relative;
 	z-index: 1;
 	display: flex;
-	flex-direction: column;
-	align-items: stretch;
+	flex-flow: row wrap;
+	align-items: center;
+	justify-content: var(--tdlb-meta-group-justify);
+	column-gap: var(--tdlb-meta-inline-gap);
 	row-gap: var(--tdlb-meta-stack-gap);
 	box-sizing: border-box;
 	margin: 0 0 var(--tdlb-entry-gap);
@@ -101,6 +98,11 @@
 	margin-bottom: 0;
 }
 
+/*
+ * React nests authors/content inside .liveblog-entry-main. display: contents
+ * makes those children participate in the parent flex ordering without moving
+ * or rebuilding Liveblog's DOM.
+ */
 .tdlb-liveblog .liveblog-entry-main {
 	display: contents;
 }
@@ -112,13 +114,15 @@
 	padding: var(--tdlb-meta-padding);
 	color: var(--tdlb-meta-color);
 	background: var(--tdlb-meta-bg);
+	flex: 0 0 var(--tdlb-meta-basis);
+	max-width: 100%;
+	text-align: var(--tdlb-meta-text-align);
 }
 
 .tdlb-liveblog .liveblog-entry-aside {
 	display: var(--tdlb-time-section-display);
 	order: var(--tdlb-timestamp-order);
 	min-width: 0;
-	text-align: var(--tdlb-timestamp-align);
 }
 
 .tdlb-liveblog .liveblog-meta-authors {
@@ -126,9 +130,8 @@
 	order: var(--tdlb-author-order);
 	flex-wrap: wrap;
 	align-items: center;
-	justify-content: var(--tdlb-author-justify);
+	justify-content: var(--tdlb-meta-group-justify);
 	gap: var(--tdlb-meta-gap);
-	text-align: var(--tdlb-author-align);
 }
 
 .tdlb-liveblog .liveblog-meta-author {
@@ -162,17 +165,51 @@
 	display: var(--tdlb-exact-time-display);
 }
 
+/* Optional character/symbol prefixes. */
+.tdlb-liveblog .liveblog-meta-authors::before {
+	content: var(--tdlb-author-prefix-content);
+	display: inline-block;
+	margin-inline-end: 0.35em;
+}
+
+.tdlb-liveblog .liveblog-meta-time::before {
+	content: var(--tdlb-timestamp-prefix-content);
+	display: inline-block;
+	margin-inline-end: 0.35em;
+}
+
+/*
+ * Separator belongs to whichever metadata section is first in Inline layout.
+ * It is presentation-only and never mutates Liveblog's React output.
+ */
+.tdlb-liveblog .liveblog-meta-authors::after {
+	content: var(--tdlb-meta-separator-content);
+	display: var(--tdlb-author-separator-display);
+	margin-inline-start: var(--tdlb-meta-inline-gap);
+}
+
+.tdlb-liveblog .liveblog-entry-aside::after {
+	content: var(--tdlb-meta-separator-content);
+	display: var(--tdlb-time-separator-display);
+	margin-inline-start: var(--tdlb-meta-inline-gap);
+}
+
 .tdlb-liveblog .liveblog-entry-content,
 .tdlb-liveblog .liveblog-entry-edit {
 	order: var(--tdlb-content-order);
+	flex: 0 0 100%;
+	width: 100%;
 	box-sizing: border-box;
 	padding: var(--tdlb-content-padding);
 	color: var(--tdlb-content-color);
 	background: var(--tdlb-content-bg);
+	border: var(--tdlb-content-border-width) var(--tdlb-content-border-style) var(--tdlb-content-border-color);
+	border-radius: var(--tdlb-content-radius);
 }
 
 .tdlb-liveblog .liveblog-entry-tools {
 	order: 90;
+	flex: 0 0 100%;
 }
 
 .tdlb-liveblog .liveblog-entry-content > :first-child {
