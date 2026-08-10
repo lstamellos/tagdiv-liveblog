@@ -124,22 +124,14 @@ final class Tagdiv_Liveblog_Plugin {
 	/**
 	 * Presentation-only controls owned by this integration.
 	 *
-	 * Liveblog ordering, polling, pagination and administration remain upstream.
+	 * Header title, URL and block-header style stay owned by TagDiv's native
+	 * General/Header settings. Liveblog ordering, polling, pagination and
+	 * administration remain upstream.
 	 *
 	 * @return array<int,array<string,mixed>>
 	 */
 	private static function get_custom_block_params() {
 		return array(
-			array(
-				'param_name'  => 'title',
-				'type'        => 'textfield',
-				'value'       => '',
-				'heading'     => __( 'Liveblog title', 'tagdiv-liveblog' ),
-				'description' => __( 'Optional heading displayed above the live updates.', 'tagdiv-liveblog' ),
-				'holder'      => 'div',
-				'class'       => 'tdc-textfield-extrabig',
-			),
-
 			// Metadata.
 			array(
 				'param_name' => 'show_author',
