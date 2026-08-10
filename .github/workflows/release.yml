@@ -80,12 +80,12 @@ jobs:
           cat > dist/release-notes.md <<EOF
           ## tagDiv Liveblog ${VERSION}
 
-          This release completes configurable native Liveblog pagination inside Newspaper / tagDiv Composer and fixes direct numeric entry deep links such as `#60819`.
+          This release completes configurable native Liveblog pagination inside Newspaper / tagDiv Composer and fixes direct numeric entry deep links such as #60819.
 
           Highlights:
           - Liveblog entries per page are configurable from the TagDiv block, with a supported range of 1–100 and a default of 20;
           - the configured page size is applied consistently to both normal native pagination and direct entry deep-link requests;
-          - direct `#<entry-id>` loads calculate pagination from a current Liveblog anchor instead of stale cached page state;
+          - direct #<entry-id> loads calculate pagination from a current Liveblog anchor instead of stale cached page state;
           - First / Prev / Next / Last work immediately after a direct entry deep-link load, without waiting for polling or a new-entry notification;
           - direct entry links scroll to the requested Liveblog entry after the integrated DOM is ready;
           - numeric entry fragments are removed when native pagination or the native new-entry control leaves the linked-entry context;
