@@ -9,7 +9,7 @@ This file translates the useful product requirements from the legacy `lstamellos
 - Newspaper / tagDiv Composer
 - Automattic Liveblog
 
-Automattic Liveblog remains the source of truth for entries, polling, REST/AJAX, editor permissions, live/archive state, lazy loading and frontend editing.
+Automattic Liveblog remains the source of truth for entries, polling, REST/AJAX, editor permissions, live/archive state, lazy loading, frontend editing and Key Event state/data.
 
 ## Presentation requirements
 
@@ -59,6 +59,20 @@ Automattic Liveblog remains the source of truth for entries, polling, REST/AJAX,
 - Line width.
 - Position/offset.
 
+### Key Events
+
+- Optionally expose exactly one native `#liveblog-key-events` portal target above the integrated feed.
+- Automattic Liveblog remains authoritative for Key Event storage, content format, API requests, navigation and removal.
+- Do not create a second Key Event store, endpoint, polling loop or renderer.
+- Allow Composer controls to style the native Key Events summary without reconstructing its upstream event markup.
+- Allow optional highlighting of current key entries in the main feed using Automattic Liveblog's authoritative runtime `.is-key-event` marker.
+- Do not treat stale/legacy `.type-key` comment classes as current frontend Key Event state; `.type-key` may be used only for a static Composer preview marker.
+- Allow an optional configurable label on authoritative key entries.
+- Preserve the upstream `.liveblog-key-events` wrapper semantics required by Automattic Liveblog's native Key Event removal confirmation UI.
+- When the upstream Key Events list becomes empty, hide the adapter summary surface without replacing upstream state handling.
+- On archived Liveblogs, retain the summary and key-entry presentation while allowing Automattic Liveblog to suppress editor-side Key Event controls.
+- Do not synthesize an immediate main-feed state reconciliation after upstream `delete_key`; the next authoritative Liveblog fetch/reload owns that reconciliation.
+
 ### Responsive
 
 - Use tagDiv responsive parameter types where the installed Newspaper/td-composer version confirms their runtime format.
@@ -69,12 +83,14 @@ Automattic Liveblog remains the source of truth for entries, polling, REST/AJAX,
 - Do not start Liveblog polling or frontend editing inside Composer.
 - Render a representative static preview using upstream Liveblog class names.
 - Composer controls should visibly update the preview.
+- Key Events preview content is static and must not mount a second `#liveblog-key-events` portal or start upstream Key Event API activity.
 
 ## Dynamic entry compatibility
 
 - Newly inserted entries must inherit presentation automatically through scoped CSS.
 - Do not repair or reconstruct entry markup with JavaScript.
 - JavaScript may relocate the single upstream root container into the tagDiv slot before the upstream Liveblog frontend application starts.
+- JavaScript may preserve upstream semantic wrapper classes needed for native Liveblog component behavior, but must not duplicate their state or markup.
 
 ## Explicitly excluded
 
@@ -89,6 +105,7 @@ The following legacy features are outside this plugin's initial scope:
 - Liveblog template overrides.
 - DOM reconstruction of metadata blocks.
 - Site-wide high-priority CSS overrides.
+- Independent Key Event storage or rendering.
 
 ## Deferred behavioral requirements
 
