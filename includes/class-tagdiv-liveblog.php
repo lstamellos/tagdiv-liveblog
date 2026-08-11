@@ -205,6 +205,132 @@ final class Tagdiv_Liveblog_Plugin {
 				'none'
 			),
 
+			// Key Events: native summary plus presentation of upstream .type-key entries.
+			self::choice_param(
+				'key_events_summary',
+				__( 'Key Events summary', 'tagdiv-liveblog' ),
+				'Key Events',
+				array(
+					__( 'Off', 'tagdiv-liveblog' ) => 'no',
+					__( 'On', 'tagdiv-liveblog' )  => 'yes',
+				),
+				'no'
+			),
+			array(
+				'param_name'  => 'key_events_title',
+				'type'        => 'textfield',
+				'value'       => 'Κύρια σημεία',
+				'std'         => 'Κύρια σημεία',
+				'heading'     => __( 'Summary title', 'tagdiv-liveblog' ),
+				'description' => __( 'Title above the native Automattic Liveblog Key Events list. Key-event content format remains the upstream per-post Liveblog setting.', 'tagdiv-liveblog' ),
+				'holder'      => 'div',
+				'group'       => __( 'Key Events', 'tagdiv-liveblog' ),
+			),
+			self::color_param( 'key_summary_background', __( 'Summary background', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::color_param( 'key_summary_text_color', __( 'Summary text color', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::color_param( 'key_summary_border_color', __( 'Summary border color', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::number_param( 'key_summary_border_width', __( 'Summary border width', 'tagdiv-liveblog' ), 'Key Events', 1 ),
+			self::choice_param(
+				'key_summary_border_style',
+				__( 'Summary border style', 'tagdiv-liveblog' ),
+				'Key Events',
+				array(
+					__( 'Solid', 'tagdiv-liveblog' )  => 'solid',
+					__( 'Dashed', 'tagdiv-liveblog' ) => 'dashed',
+					__( 'Dotted', 'tagdiv-liveblog' ) => 'dotted',
+					__( 'Double', 'tagdiv-liveblog' ) => 'double',
+					__( 'None', 'tagdiv-liveblog' )   => 'none',
+				),
+				'solid'
+			),
+			self::number_param( 'key_summary_radius', __( 'Summary border radius', 'tagdiv-liveblog' ), 'Key Events', 0 ),
+			self::number_param( 'key_summary_padding', __( 'Summary padding', 'tagdiv-liveblog' ), 'Key Events', 16 ),
+			self::number_param( 'key_summary_margin_bottom', __( 'Space below summary', 'tagdiv-liveblog' ), 'Key Events', 24 ),
+			self::number_param( 'key_summary_title_size', __( 'Summary title size', 'tagdiv-liveblog' ), 'Key Events', 20 ),
+			self::choice_param(
+				'key_summary_title_weight',
+				__( 'Summary title weight', 'tagdiv-liveblog' ),
+				'Key Events',
+				array(
+					__( 'Normal (400)', 'tagdiv-liveblog' )     => '400',
+					__( 'Medium (500)', 'tagdiv-liveblog' )     => '500',
+					__( 'Semi-bold (600)', 'tagdiv-liveblog' )  => '600',
+					__( 'Bold (700)', 'tagdiv-liveblog' )       => '700',
+					__( 'Extra-bold (800)', 'tagdiv-liveblog' ) => '800',
+				),
+				'700'
+			),
+			self::number_param( 'key_summary_item_gap', __( 'Summary item gap', 'tagdiv-liveblog' ), 'Key Events', 10 ),
+			self::color_param( 'key_summary_item_border_color', __( 'Summary item border color', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::number_param( 'key_summary_item_border_width', __( 'Summary item border width', 'tagdiv-liveblog' ), 'Key Events', 0 ),
+			self::choice_param(
+				'key_highlight',
+				__( 'Highlight key entries in feed', 'tagdiv-liveblog' ),
+				'Key Events',
+				array(
+					__( 'Off', 'tagdiv-liveblog' ) => 'no',
+					__( 'On', 'tagdiv-liveblog' )  => 'yes',
+				),
+				'no'
+			),
+			self::color_param( 'key_entry_background', __( 'Key entry background', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::color_param( 'key_entry_text_color', __( 'Key entry text color', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::color_param( 'key_entry_border_color', __( 'Key entry border color', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::number_param( 'key_entry_border_width', __( 'Key entry border width', 'tagdiv-liveblog' ), 'Key Events', 0 ),
+			self::choice_param(
+				'key_entry_border_style',
+				__( 'Key entry border style', 'tagdiv-liveblog' ),
+				'Key Events',
+				array(
+					__( 'Solid', 'tagdiv-liveblog' )  => 'solid',
+					__( 'Dashed', 'tagdiv-liveblog' ) => 'dashed',
+					__( 'Dotted', 'tagdiv-liveblog' ) => 'dotted',
+					__( 'Double', 'tagdiv-liveblog' ) => 'double',
+					__( 'None', 'tagdiv-liveblog' )   => 'none',
+				),
+				'solid'
+			),
+			self::number_param( 'key_entry_radius', __( 'Key entry border radius', 'tagdiv-liveblog' ), 'Key Events', 0 ),
+			self::color_param( 'key_entry_accent_color', __( 'Key entry accent color', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::number_param( 'key_entry_accent_width', __( 'Key entry accent width', 'tagdiv-liveblog' ), 'Key Events', 3 ),
+			self::choice_param(
+				'key_label',
+				__( 'Key entry label', 'tagdiv-liveblog' ),
+				'Key Events',
+				array(
+					__( 'Hide', 'tagdiv-liveblog' ) => 'no',
+					__( 'Show', 'tagdiv-liveblog' ) => 'yes',
+				),
+				'no'
+			),
+			array(
+				'param_name'  => 'key_label_text',
+				'type'        => 'textfield',
+				'value'       => 'Κύριο σημείο',
+				'std'         => 'Κύριο σημείο',
+				'heading'     => __( 'Key entry label text', 'tagdiv-liveblog' ),
+				'holder'      => 'div',
+				'group'       => __( 'Key Events', 'tagdiv-liveblog' ),
+			),
+			self::color_param( 'key_label_background', __( 'Label background', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::color_param( 'key_label_text_color', __( 'Label text color', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::number_param( 'key_label_font_size', __( 'Label font size', 'tagdiv-liveblog' ), 'Key Events', 12 ),
+			self::choice_param(
+				'key_label_font_weight',
+				__( 'Label font weight', 'tagdiv-liveblog' ),
+				'Key Events',
+				array(
+					__( 'Normal (400)', 'tagdiv-liveblog' )     => '400',
+					__( 'Medium (500)', 'tagdiv-liveblog' )     => '500',
+					__( 'Semi-bold (600)', 'tagdiv-liveblog' )  => '600',
+					__( 'Bold (700)', 'tagdiv-liveblog' )       => '700',
+					__( 'Extra-bold (800)', 'tagdiv-liveblog' ) => '800',
+				),
+				'700'
+			),
+			self::number_param( 'key_label_letter_spacing', __( 'Label letter spacing', 'tagdiv-liveblog' ), 'Key Events', 0 ),
+			self::number_param( 'key_label_margin_bottom', __( 'Space below label', 'tagdiv-liveblog' ), 'Key Events', 8 ),
+
 			// Metadata.
 			array(
 				'param_name' => 'show_author',
@@ -353,14 +479,6 @@ final class Tagdiv_Liveblog_Plugin {
 		);
 	}
 
-	/**
-	 * Build a colorpicker parameter.
-	 *
-	 * @param string $name  Parameter name.
-	 * @param string $label Label.
-	 * @param string $group Group.
-	 * @return array<string,mixed>
-	 */
 	private static function color_param( $name, $label, $group ) {
 		return array(
 			'param_name' => $name,
@@ -371,15 +489,6 @@ final class Tagdiv_Liveblog_Plugin {
 		);
 	}
 
-	/**
-	 * Build a numeric text field parameter, interpreted as pixels.
-	 *
-	 * @param string $name    Parameter name.
-	 * @param string $label   Label.
-	 * @param string $group   Group.
-	 * @param int    $default Default value.
-	 * @return array<string,mixed>
-	 */
 	private static function number_param( $name, $label, $group, $default ) {
 		return array(
 			'param_name'  => $name,
@@ -393,16 +502,6 @@ final class Tagdiv_Liveblog_Plugin {
 		);
 	}
 
-	/**
-	 * Build a dropdown parameter.
-	 *
-	 * @param string               $name    Parameter name.
-	 * @param string               $label   Label.
-	 * @param string               $group   Group.
-	 * @param array<string,string> $values  Display labels mapped to values.
-	 * @param string               $default Default value.
-	 * @return array<string,mixed>
-	 */
 	private static function choice_param( $name, $label, $group, $values, $default ) {
 		return array(
 			'param_name' => $name,
@@ -414,15 +513,6 @@ final class Tagdiv_Liveblog_Plugin {
 		);
 	}
 
-	/**
-	 * Build top/bottom placement control.
-	 *
-	 * @param string $name    Parameter name.
-	 * @param string $label   Label.
-	 * @param string $group   Group.
-	 * @param string $default Default value.
-	 * @return array<string,mixed>
-	 */
 	private static function position_param( $name, $label, $group, $default ) {
 		return array(
 			'param_name' => $name,
@@ -437,15 +527,6 @@ final class Tagdiv_Liveblog_Plugin {
 		);
 	}
 
-	/**
-	 * Build horizontal alignment control.
-	 *
-	 * @param string $name    Parameter name.
-	 * @param string $label   Label.
-	 * @param string $group   Group.
-	 * @param string $default Default value.
-	 * @return array<string,mixed>
-	 */
 	private static function alignment_param( $name, $label, $group, $default ) {
 		return array(
 			'param_name' => $name,
@@ -525,29 +606,17 @@ final class Tagdiv_Liveblog_Plugin {
 		}
 	}
 
-	/**
-	 * Whether this request is the tagDiv live editor or its AJAX renderer.
-	 *
-	 * @return bool
-	 */
 	public static function is_composer_request() {
 		if ( ! class_exists( 'td_util' ) ) {
 			return false;
 		}
 
-		$iframe = method_exists( 'td_util', 'tdc_is_live_editor_iframe' )
-			&& td_util::tdc_is_live_editor_iframe();
-		$ajax   = method_exists( 'td_util', 'tdc_is_live_editor_ajax' )
-			&& td_util::tdc_is_live_editor_ajax();
+		$iframe = method_exists( 'td_util', 'tdc_is_live_editor_iframe' ) && td_util::tdc_is_live_editor_iframe();
+		$ajax   = method_exists( 'td_util', 'tdc_is_live_editor_ajax' ) && td_util::tdc_is_live_editor_ajax();
 
 		return $iframe || $ajax;
 	}
 
-	/**
-	 * Get the actual Liveblog post ID for this request.
-	 *
-	 * @return int
-	 */
 	public static function get_liveblog_post_id() {
 		if ( class_exists( 'WPCOM_Liveblog' ) ) {
 			$post_id = absint( WPCOM_Liveblog::$post_id );
@@ -563,11 +632,6 @@ final class Tagdiv_Liveblog_Plugin {
 		return absint( get_queried_object_id() );
 	}
 
-	/**
-	 * Get the normalized Liveblog state for the resolved article.
-	 *
-	 * @return string|false
-	 */
 	public static function get_liveblog_state() {
 		if ( ! class_exists( 'WPCOM_Liveblog' ) ) {
 			return false;
@@ -586,33 +650,14 @@ final class Tagdiv_Liveblog_Plugin {
 		return is_string( $state ) ? $state : false;
 	}
 
-	/**
-	 * Whether the resolved post has an active or archived Liveblog state.
-	 *
-	 * @return bool
-	 */
 	public static function is_liveblog_post() {
 		return in_array( self::get_liveblog_state(), array( 'enable', 'archive' ), true );
 	}
 
-	/**
-	 * Whether the resolved post is an archived Liveblog.
-	 *
-	 * @return bool
-	 */
 	public static function is_archived_liveblog_post() {
 		return 'archive' === self::get_liveblog_state();
 	}
 
-	/**
-	 * Whether the current user may change the current Liveblog state.
-	 *
-	 * Prefer the post-scoped capability helper provided by Automattic Liveblog
-	 * 1.12.x. The fallback keeps this adapter usable with older compatible
-	 * releases while still authorising against the specific post.
-	 *
-	 * @return bool
-	 */
 	public static function current_user_can_manage_liveblog() {
 		if ( ! is_user_logged_in() || ! class_exists( 'WPCOM_Liveblog' ) ) {
 			return false;
