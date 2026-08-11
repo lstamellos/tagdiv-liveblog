@@ -209,7 +209,7 @@
 	border-radius: var(--tdlb-entry-radius);
 }
 
-.tdlb-liveblog[data-key-highlight="1"] .liveblog-entry.type-key {
+.tdlb-liveblog[data-key-highlight="1"] .liveblog-entry:is(.is-key-event, .tdlb-preview-entry.type-key) {
 	color: var(--tdlb-key-entry-color);
 	background: var(--tdlb-key-entry-bg);
 	border-color: var(--tdlb-key-entry-border-color);
@@ -220,7 +220,7 @@
 	border-inline-start-color: var(--tdlb-key-entry-accent-color);
 }
 
-.tdlb-liveblog[data-key-highlight="1"] .liveblog-entry.type-key::before {
+.tdlb-liveblog[data-key-highlight="1"] .liveblog-entry:is(.is-key-event, .tdlb-preview-entry.type-key)::before {
 	content: var(--tdlb-key-label-content);
 	display: var(--tdlb-key-label-display);
 	order: 0;
