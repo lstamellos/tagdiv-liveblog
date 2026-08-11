@@ -141,7 +141,7 @@ final class Tagdiv_Liveblog_Plugin {
 				'value'       => 'Η ανταπόκριση έχει ολοκληρωθεί',
 				'std'         => 'Η ανταπόκριση έχει ολοκληρωθεί',
 				'heading'     => __( 'Archived notice text', 'tagdiv-liveblog' ),
-				'description' => __( 'Plain-text message shown above an archived Liveblog on every native pagination page.', 'tagdiv-liveblog' ),
+				'description' => __( 'Plain-text message shown above an archived Liveblog on every native Liveblog pagination page.', 'tagdiv-liveblog' ),
 				'holder'      => 'div',
 				'group'       => __( 'Archived notice', 'tagdiv-liveblog' ),
 			),
@@ -204,6 +204,132 @@ final class Tagdiv_Liveblog_Plugin {
 				),
 				'none'
 			),
+
+			// Key Events: native upstream summary plus optional presentation of authoritative key entries.
+			self::choice_param(
+				'key_events_summary',
+				__( 'Key Events summary', 'tagdiv-liveblog' ),
+				'Key Events',
+				array(
+					__( 'Off', 'tagdiv-liveblog' ) => 'no',
+					__( 'On', 'tagdiv-liveblog' )  => 'yes',
+				),
+				'no'
+			),
+			array(
+				'param_name'  => 'key_events_title',
+				'type'        => 'textfield',
+				'value'       => 'Κύρια σημεία',
+				'std'         => 'Κύρια σημεία',
+				'heading'     => __( 'Summary title', 'tagdiv-liveblog' ),
+				'description' => __( 'Title above the native Automattic Liveblog Key Events list. Key-event content format remains the upstream per-post Liveblog setting.', 'tagdiv-liveblog' ),
+				'holder'      => 'div',
+				'group'       => __( 'Key Events', 'tagdiv-liveblog' ),
+			),
+			self::color_param( 'key_summary_background', __( 'Summary background', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::color_param( 'key_summary_text_color', __( 'Summary text color', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::color_param( 'key_summary_border_color', __( 'Summary border color', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::number_param( 'key_summary_border_width', __( 'Summary border width', 'tagdiv-liveblog' ), 'Key Events', 1 ),
+			self::choice_param(
+				'key_summary_border_style',
+				__( 'Summary border style', 'tagdiv-liveblog' ),
+				'Key Events',
+				array(
+					__( 'Solid', 'tagdiv-liveblog' )  => 'solid',
+					__( 'Dashed', 'tagdiv-liveblog' ) => 'dashed',
+					__( 'Dotted', 'tagdiv-liveblog' ) => 'dotted',
+					__( 'Double', 'tagdiv-liveblog' ) => 'double',
+					__( 'None', 'tagdiv-liveblog' )   => 'none',
+				),
+				'solid'
+			),
+			self::number_param( 'key_summary_radius', __( 'Summary border radius', 'tagdiv-liveblog' ), 'Key Events', 0 ),
+			self::number_param( 'key_summary_padding', __( 'Summary padding', 'tagdiv-liveblog' ), 'Key Events', 16 ),
+			self::number_param( 'key_summary_margin_bottom', __( 'Space below summary', 'tagdiv-liveblog' ), 'Key Events', 24 ),
+			self::number_param( 'key_summary_title_size', __( 'Summary title size', 'tagdiv-liveblog' ), 'Key Events', 20 ),
+			self::choice_param(
+				'key_summary_title_weight',
+				__( 'Summary title weight', 'tagdiv-liveblog' ),
+				'Key Events',
+				array(
+					__( 'Normal (400)', 'tagdiv-liveblog' )     => '400',
+					__( 'Medium (500)', 'tagdiv-liveblog' )     => '500',
+					__( 'Semi-bold (600)', 'tagdiv-liveblog' )  => '600',
+					__( 'Bold (700)', 'tagdiv-liveblog' )       => '700',
+					__( 'Extra-bold (800)', 'tagdiv-liveblog' ) => '800',
+				),
+				'700'
+			),
+			self::number_param( 'key_summary_item_gap', __( 'Summary item gap', 'tagdiv-liveblog' ), 'Key Events', 10 ),
+			self::color_param( 'key_summary_item_border_color', __( 'Summary item border color', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::number_param( 'key_summary_item_border_width', __( 'Summary item border width', 'tagdiv-liveblog' ), 'Key Events', 0 ),
+			self::choice_param(
+				'key_highlight',
+				__( 'Highlight key entries in feed', 'tagdiv-liveblog' ),
+				'Key Events',
+				array(
+					__( 'Off', 'tagdiv-liveblog' ) => 'no',
+					__( 'On', 'tagdiv-liveblog' )  => 'yes',
+				),
+				'no'
+			),
+			self::color_param( 'key_entry_background', __( 'Key entry background', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::color_param( 'key_entry_text_color', __( 'Key entry text color', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::color_param( 'key_entry_border_color', __( 'Key entry border color', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::number_param( 'key_entry_border_width', __( 'Key entry border width', 'tagdiv-liveblog' ), 'Key Events', 0 ),
+			self::choice_param(
+				'key_entry_border_style',
+				__( 'Key entry border style', 'tagdiv-liveblog' ),
+				'Key Events',
+				array(
+					__( 'Solid', 'tagdiv-liveblog' )  => 'solid',
+					__( 'Dashed', 'tagdiv-liveblog' ) => 'dashed',
+					__( 'Dotted', 'tagdiv-liveblog' ) => 'dotted',
+					__( 'Double', 'tagdiv-liveblog' ) => 'double',
+					__( 'None', 'tagdiv-liveblog' )   => 'none',
+				),
+				'solid'
+			),
+			self::number_param( 'key_entry_radius', __( 'Key entry border radius', 'tagdiv-liveblog' ), 'Key Events', 0 ),
+			self::color_param( 'key_entry_accent_color', __( 'Key entry accent color', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::number_param( 'key_entry_accent_width', __( 'Key entry accent width', 'tagdiv-liveblog' ), 'Key Events', 3 ),
+			self::choice_param(
+				'key_label',
+				__( 'Key entry label', 'tagdiv-liveblog' ),
+				'Key Events',
+				array(
+					__( 'Hide', 'tagdiv-liveblog' ) => 'no',
+					__( 'Show', 'tagdiv-liveblog' ) => 'yes',
+				),
+				'no'
+			),
+			array(
+				'param_name'  => 'key_label_text',
+				'type'        => 'textfield',
+				'value'       => 'Κύριο σημείο',
+				'std'         => 'Κύριο σημείο',
+				'heading'     => __( 'Key entry label text', 'tagdiv-liveblog' ),
+				'holder'      => 'div',
+				'group'       => __( 'Key Events', 'tagdiv-liveblog' ),
+			),
+			self::color_param( 'key_label_background', __( 'Label background', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::color_param( 'key_label_text_color', __( 'Label text color', 'tagdiv-liveblog' ), 'Key Events' ),
+			self::number_param( 'key_label_font_size', __( 'Label font size', 'tagdiv-liveblog' ), 'Key Events', 12 ),
+			self::choice_param(
+				'key_label_font_weight',
+				__( 'Label font weight', 'tagdiv-liveblog' ),
+				'Key Events',
+				array(
+					__( 'Normal (400)', 'tagdiv-liveblog' )     => '400',
+					__( 'Medium (500)', 'tagdiv-liveblog' )     => '500',
+					__( 'Semi-bold (600)', 'tagdiv-liveblog' )  => '600',
+					__( 'Bold (700)', 'tagdiv-liveblog' )       => '700',
+					__( 'Extra-bold (800)', 'tagdiv-liveblog' ) => '800',
+				),
+				'700'
+			),
+			self::number_param( 'key_label_letter_spacing', __( 'Label letter spacing', 'tagdiv-liveblog' ), 'Key Events', 0 ),
+			self::number_param( 'key_label_margin_bottom', __( 'Space below label', 'tagdiv-liveblog' ), 'Key Events', 8 ),
 
 			// Metadata.
 			array(

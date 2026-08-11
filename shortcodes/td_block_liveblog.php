@@ -41,6 +41,38 @@ class td_block_liveblog extends td_block {
 				'archive_notice_font_style'     => 'normal',
 				'archive_notice_text_align'     => 'left',
 				'archive_notice_text_transform' => 'none',
+				'key_events_summary'            => 'no',
+				'key_events_title'              => 'Κύρια σημεία',
+				'key_summary_background'        => '',
+				'key_summary_text_color'        => '',
+				'key_summary_border_color'      => '',
+				'key_summary_border_width'      => '1',
+				'key_summary_border_style'      => 'solid',
+				'key_summary_radius'            => '0',
+				'key_summary_padding'           => '16',
+				'key_summary_margin_bottom'     => '24',
+				'key_summary_title_size'        => '20',
+				'key_summary_title_weight'      => '700',
+				'key_summary_item_gap'          => '10',
+				'key_summary_item_border_color' => '',
+				'key_summary_item_border_width' => '0',
+				'key_highlight'                 => 'no',
+				'key_entry_background'          => '',
+				'key_entry_text_color'          => '',
+				'key_entry_border_color'        => '',
+				'key_entry_border_width'        => '0',
+				'key_entry_border_style'        => 'solid',
+				'key_entry_radius'              => '0',
+				'key_entry_accent_color'        => '',
+				'key_entry_accent_width'        => '3',
+				'key_label'                     => 'no',
+				'key_label_text'                => 'Κύριο σημείο',
+				'key_label_background'          => '',
+				'key_label_text_color'          => '',
+				'key_label_font_size'           => '12',
+				'key_label_font_weight'         => '700',
+				'key_label_letter_spacing'      => '0',
+				'key_label_margin_bottom'       => '8',
 				'show_author'                   => 'yes',
 				'show_avatar'                   => 'yes',
 				'show_timestamp'                => 'yes',
@@ -109,6 +141,7 @@ class td_block_liveblog extends td_block {
 			$entries_per_page = 20;
 		}
 		$entries_per_page = min( $entries_per_page, 100 );
+		$key_highlight     = 'yes' === $this->get_shortcode_att( 'key_highlight' ) ? '1' : '0';
 
 		$buffy  = '<div class="' . esc_attr( $classes ) . '">';
 		$buffy .= $this->get_block_css();
@@ -117,7 +150,7 @@ class td_block_liveblog extends td_block {
 			$buffy .= '<div class="td-block-title-wrap">' . $block_title . '</div>';
 		}
 
-		$buffy .= '<div class="tdlb-liveblog" data-tagdiv-liveblog-slot="1" data-liveblog-post-id="' . esc_attr( (string) absint( $post_id ) ) . '" data-liveblog-entries-per-page="' . esc_attr( (string) $entries_per_page ) . '"' . ( $style ? ' style="' . esc_attr( $style ) . '"' : '' ) . '>';
+		$buffy .= '<div class="tdlb-liveblog" data-tagdiv-liveblog-slot="1" data-liveblog-post-id="' . esc_attr( (string) absint( $post_id ) ) . '" data-liveblog-entries-per-page="' . esc_attr( (string) $entries_per_page ) . '" data-key-highlight="' . esc_attr( $key_highlight ) . '"' . ( $style ? ' style="' . esc_attr( $style ) . '"' : '' ) . '>';
 
 		/*
 		 * Frontend state management is only a convenience UI. The actual mutation
@@ -138,6 +171,8 @@ class td_block_liveblog extends td_block {
 			$preview_attribute = $is_composer ? ' data-tdlb-archive-notice-preview="1"' : '';
 			$buffy            .= '<div class="tdlb-archive-notice"' . $preview_attribute . '>' . esc_html( $this->get_archive_notice_text( $post_id ) ) . '</div>';
 		}
+
+		$buffy .= $this->render_key_events_summary( $is_composer );
 
 		if ( $is_composer ) {
 			$buffy .= $this->render_preview();
@@ -170,6 +205,47 @@ class td_block_liveblog extends td_block {
 		$message = apply_filters( 'tagdiv_liveblog_archive_notice_text', $message, absint( $post_id ) );
 
 		return wp_strip_all_tags( (string) $message );
+	}
+
+	/**
+	 * Render the native Automattic Liveblog key-events portal target.
+	 *
+	 * On the frontend the upstream React app detects #liveblog-key-events during
+	 * construction, loads key events through its own API and portals its native
+	 * EventsContainer into this mount. Composer uses a static representation so
+	 * no second Liveblog runtime is started in the editor.
+	 *
+	 * @param bool $is_composer Whether this is a Composer request.
+	 * @return string
+	 */
+	private function render_key_events_summary( $is_composer ) {
+		if ( 'yes' !== $this->get_shortcode_att( 'key_events_summary' ) ) {
+			return '';
+		}
+
+		$title = wp_strip_all_tags( trim( (string) $this->get_shortcode_att( 'key_events_title' ) ) );
+		if ( '' === $title ) {
+			$title = __( 'Κύρια σημεία', 'tagdiv-liveblog' );
+		}
+
+		if ( $is_composer ) {
+			$out  = '<section class="tdlb-key-events tdlb-key-events-preview">';
+			$out .= '<h2 class="widget-title">' . esc_html( $title ) . '</h2>';
+			$out .= '<ul class="liveblog-events">';
+			$out .= '<li class="liveblog-event"><div class="liveblog-event-body"><div class="liveblog-event-meta">' . esc_html__( 'Just now', 'tagdiv-liveblog' ) . '</div><div><span class="liveblog-event-content">' . esc_html__( 'A key event appears here and links to the corresponding entry in the live feed.', 'tagdiv-liveblog' ) . '</span></div></div></li>';
+			$out .= '<li class="liveblog-event"><div class="liveblog-event-body"><div class="liveblog-event-meta">' . esc_html__( '7 minutes ago', 'tagdiv-liveblog' ) . '</div><div><span class="liveblog-event-content">' . esc_html__( 'Key-event content and navigation remain owned by Automattic Liveblog.', 'tagdiv-liveblog' ) . '</span></div></div></li>';
+			$out .= '</ul>';
+			$out .= '</section>';
+			return $out;
+		}
+
+		static $mount_rendered = false;
+		if ( $mount_rendered ) {
+			return '';
+		}
+		$mount_rendered = true;
+
+		return '<section class="tdlb-key-events"><div id="liveblog-key-events" data-title="' . esc_attr( $title ) . '"></div></section>';
 	}
 
 	/**
@@ -243,6 +319,53 @@ class td_block_liveblog extends td_block {
 			array( 'none', 'uppercase', 'lowercase', 'capitalize' ),
 			'none'
 		);
+
+		$this->add_color_variable( $variables, '--tdlb-key-summary-bg', 'key_summary_background' );
+		$this->add_color_variable( $variables, '--tdlb-key-summary-color', 'key_summary_text_color' );
+		$this->add_color_variable( $variables, '--tdlb-key-summary-border-color', 'key_summary_border_color' );
+		$this->add_px_variable( $variables, '--tdlb-key-summary-border-width', 'key_summary_border_width' );
+		$this->add_px_variable( $variables, '--tdlb-key-summary-radius', 'key_summary_radius' );
+		$this->add_px_variable( $variables, '--tdlb-key-summary-padding', 'key_summary_padding' );
+		$this->add_px_variable( $variables, '--tdlb-key-summary-margin-bottom', 'key_summary_margin_bottom' );
+		$this->add_px_variable( $variables, '--tdlb-key-summary-title-size', 'key_summary_title_size' );
+		$this->add_px_variable( $variables, '--tdlb-key-summary-item-gap', 'key_summary_item_gap' );
+		$this->add_color_variable( $variables, '--tdlb-key-summary-item-border-color', 'key_summary_item_border_color' );
+		$this->add_px_variable( $variables, '--tdlb-key-summary-item-border-width', 'key_summary_item_border_width' );
+		$variables[] = '--tdlb-key-summary-border-style:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'key_summary_border_style' ),
+			array( 'solid', 'dashed', 'dotted', 'double', 'none' ),
+			'solid'
+		);
+		$variables[] = '--tdlb-key-summary-title-weight:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'key_summary_title_weight' ),
+			array( '400', '500', '600', '700', '800' ),
+			'700'
+		);
+
+		$this->add_color_variable( $variables, '--tdlb-key-entry-bg', 'key_entry_background' );
+		$this->add_color_variable( $variables, '--tdlb-key-entry-color', 'key_entry_text_color' );
+		$this->add_color_variable( $variables, '--tdlb-key-entry-border-color', 'key_entry_border_color' );
+		$this->add_px_variable( $variables, '--tdlb-key-entry-border-width', 'key_entry_border_width' );
+		$this->add_px_variable( $variables, '--tdlb-key-entry-radius', 'key_entry_radius' );
+		$this->add_color_variable( $variables, '--tdlb-key-entry-accent-color', 'key_entry_accent_color' );
+		$this->add_px_variable( $variables, '--tdlb-key-entry-accent-width', 'key_entry_accent_width' );
+		$variables[] = '--tdlb-key-entry-border-style:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'key_entry_border_style' ),
+			array( 'solid', 'dashed', 'dotted', 'double', 'none' ),
+			'solid'
+		);
+		$this->add_color_variable( $variables, '--tdlb-key-label-bg', 'key_label_background' );
+		$this->add_color_variable( $variables, '--tdlb-key-label-color', 'key_label_text_color' );
+		$this->add_px_variable( $variables, '--tdlb-key-label-font-size', 'key_label_font_size' );
+		$this->add_px_variable( $variables, '--tdlb-key-label-letter-spacing', 'key_label_letter_spacing' );
+		$this->add_px_variable( $variables, '--tdlb-key-label-margin-bottom', 'key_label_margin_bottom' );
+		$variables[] = '--tdlb-key-label-font-weight:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'key_label_font_weight' ),
+			array( '400', '500', '600', '700', '800' ),
+			'700'
+		);
+		$variables[] = '--tdlb-key-label-display:' . ( 'yes' === $this->get_shortcode_att( 'key_label' ) ? 'block' : 'none' );
+		$this->add_content_variable( $variables, '--tdlb-key-label-content', 'key_label_text' );
 
 		$this->add_color_variable( $variables, '--tdlb-entry-bg', 'entry_background' );
 		$this->add_color_variable( $variables, '--tdlb-entry-color', 'entry_text_color' );
@@ -481,35 +604,38 @@ class td_block_liveblog extends td_block {
 				'time'     => '12:34',
 				'author'   => __( 'Reporter', 'tagdiv-liveblog' ),
 				'text'     => __( 'A live update appears here. Typography, spacing, borders and metadata can be adjusted from the Composer controls.', 'tagdiv-liveblog' ),
+				'key'      => true,
 			),
 			array(
 				'relative' => __( '7 minutes ago', 'tagdiv-liveblog' ),
 				'time'     => '12:27',
 				'author'   => __( 'Editor', 'tagdiv-liveblog' ),
 				'text'     => __( 'New entries inserted by Liveblog will inherit the same scoped presentation automatically.', 'tagdiv-liveblog' ),
+				'key'      => false,
 			),
 		);
 
 		$out = '<div class="liveblog-feed tdlb-preview" aria-label="' . esc_attr__( 'Liveblog preview', 'tagdiv-liveblog' ) . '">';
 
 		foreach ( $entries as $entry ) {
-			$out .= '<article class="liveblog-entry tdlb-preview-entry">';
-			$out .= '<aside class="liveblog-entry-aside">';
-			$out .= '<span class="liveblog-meta-time">';
-			$out .= '<span>' . esc_html( $entry['relative'] ) . '</span>';
-			$out .= '<span>' . esc_html( $entry['time'] ) . '</span>';
-			$out .= '</span>';
-			$out .= '</aside>';
-			$out .= '<div class="liveblog-entry-main">';
-			$out .= '<header class="liveblog-meta-authors">';
-			$out .= '<div class="liveblog-meta-author">';
-			$out .= '<div class="liveblog-meta-author-avatar"><span class="tdlb-preview-avatar" aria-hidden="true"></span></div>';
-			$out .= '<span class="liveblog-meta-author-name">' . esc_html( $entry['author'] ) . '</span>';
-			$out .= '</div>';
-			$out .= '</header>';
-			$out .= '<div class="liveblog-entry-content"><p>' . esc_html( $entry['text'] ) . '</p></div>';
-			$out .= '</div>';
-			$out .= '</article>';
+			$entry_class = 'liveblog-entry tdlb-preview-entry' . ( $entry['key'] ? ' type-key' : '' );
+			$out        .= '<article class="' . esc_attr( $entry_class ) . '">';
+			$out        .= '<aside class="liveblog-entry-aside">';
+			$out        .= '<span class="liveblog-meta-time">';
+			$out        .= '<span>' . esc_html( $entry['relative'] ) . '</span>';
+			$out        .= '<span>' . esc_html( $entry['time'] ) . '</span>';
+			$out        .= '</span>';
+			$out        .= '</aside>';
+			$out        .= '<div class="liveblog-entry-main">';
+			$out        .= '<header class="liveblog-meta-authors">';
+			$out        .= '<div class="liveblog-meta-author">';
+			$out        .= '<div class="liveblog-meta-author-avatar"><span class="tdlb-preview-avatar" aria-hidden="true"></span></div>';
+			$out        .= '<span class="liveblog-meta-author-name">' . esc_html( $entry['author'] ) . '</span>';
+			$out        .= '</div>';
+			$out        .= '</header>';
+			$out        .= '<div class="liveblog-entry-content"><p>' . esc_html( $entry['text'] ) . '</p></div>';
+			$out        .= '</div>';
+			$out        .= '</article>';
 		}
 
 		$out .= '</div>';

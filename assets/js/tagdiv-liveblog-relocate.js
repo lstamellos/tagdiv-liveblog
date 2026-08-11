@@ -6,6 +6,11 @@
 		return;
 	}
 
+	var keyEventsWrapper = slot.querySelector('.tdlb-key-events');
+	if (keyEventsWrapper) {
+		keyEventsWrapper.classList.add('liveblog-key-events');
+	}
+
 	var container = document.getElementById('wpcom-liveblog-container');
 
 	// Normally Automattic Liveblog has already injected its native root through
