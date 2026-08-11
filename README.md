@@ -14,7 +14,8 @@ Automattic Liveblog continues to own:
 - frontend editing;
 - permissions;
 - native pagination controls;
-- live/archive state and state transitions.
+- live/archive state and state transitions;
+- Key Event storage, formatting, navigation, removal and API state.
 
 `tagdiv-liveblog` owns:
 
@@ -25,6 +26,8 @@ Automattic Liveblog continues to own:
 - integration glue required for numeric entry deep links inside Newspaper/TagDiv templates;
 - the archived-state completion notice, its text and its presentation;
 - a permission-gated frontend convenience UI for Archive / Reopen that delegates state changes to Automattic Liveblog;
+- optional placement and presentation of Automattic Liveblog's native Key Events summary;
+- optional highlighting and labelling of authoritative upstream key-event entries in the main feed;
 - GitHub Releases integration for WordPress plugin updates;
 - a static Composer preview;
 - scoped CSS for the upstream Liveblog markup.
@@ -39,7 +42,7 @@ There is never a second Liveblog runtime or duplicate container, and no entry ma
 
 ## Composer controls
 
-Version 0.1.16 adds an `Archived notice` control group while retaining the controls introduced through 0.1.15:
+Version 0.1.19 adds a `Key Events` control group while retaining the controls introduced in earlier releases:
 
 - native TagDiv Header settings (`custom_title`, `custom_url`, block header style);
 - native TagDiv Design Options / CSS settings for the whole block;
@@ -50,6 +53,11 @@ Version 0.1.16 adds an `Archived notice` control group while retaining the contr
 - archived notice padding and spacing below the notice;
 - archived notice font size, line height, weight, letter spacing and font style;
 - archived notice text alignment and text transform;
+- optional native Key Events summary and configurable summary title;
+- Key Events summary background, text, border, spacing and title presentation;
+- optional highlighting of authoritative key entries in the main feed;
+- Key Event entry background, text, border, radius and accent presentation;
+- optional configurable Key Event label, defaulting to `Κύριο σημείο`;
 - author, avatar and timestamp visibility;
 - exact, relative or combined timestamp display;
 - stacked or inline metadata layout;
@@ -63,6 +71,20 @@ Version 0.1.16 adds an `Archived notice` control group while retaining the contr
 The plugin does not add its own paginator. First / Prev / Next / Last, polling, page replacement and entry loading remain native Automattic Liveblog behavior.
 
 See [`docs/requirements.md`](docs/requirements.md) for the requirements map and exclusions.
+
+## Key Events
+
+When `Key Events summary` is enabled, the adapter renders exactly one `#liveblog-key-events` portal target above the feed. Automattic Liveblog's existing React application detects that mount, loads Key Events through its own API and renders its native Key Events container into it. The adapter does not create a second Key Event store, endpoint, polling loop or renderer.
+
+The upstream per-post Key Event content format remains authoritative. Native Key Event navigation and editor-side removal also remain owned by Automattic Liveblog.
+
+For feed presentation, the adapter uses Automattic Liveblog's runtime `.is-key-event` class, which reflects the authoritative `entry.key_event` value. Legacy/stale `.type-key` comment classes are not treated as current frontend Key Event state; `.type-key` is used only on the static Composer preview entry.
+
+The summary wrapper preserves Automattic Liveblog's `.liveblog-key-events` semantic class so the upstream Key Event removal confirmation panel and its Cancel / Confirm controls retain their native positioning and behavior.
+
+After an upstream `delete_key` operation, Automattic Liveblog updates its Key Events store immediately but may leave the already-rendered main-feed entry presentation unchanged until the next authoritative fetch or page reload. The adapter deliberately does not create a second reconciliation path for that upstream state behavior.
+
+Archived Liveblogs continue to display their Key Events summary and Key Event presentation, while Automattic Liveblog removes editor-side Key Event controls because archived Liveblogs are not editable. Reopening restores those controls through the normal upstream state transition.
 
 ## Archived Liveblog notice
 
@@ -135,7 +157,7 @@ The Liveblog block can be placed in a Global Single Cloud Template. On posts wit
 
 ## Validated runtime
 
-Version 0.1.16 was validated on OmniaTV with:
+Version 0.1.19 was validated on OmniaTV with:
 
 - WordPress 7.0.3
 - PHP 8.3.6
@@ -153,7 +175,12 @@ Validation covers:
 - permission-gated frontend Archive / Reopen controls;
 - upstream nonce and post-scoped permission enforcement for frontend state changes;
 - active → archive and archive → enable transitions with page reload;
-- direct entry deep links with the archived notice present;
+- native Key Events summary rendering and automatic hiding when empty;
+- native Key Event jump/pagination behavior;
+- authoritative `.is-key-event` feed highlighting and configurable labels;
+- native Key Event removal confirmation and selected-event removal;
+- authoritative state reconciliation after reload;
+- Key Events behavior across archive and reopen transitions;
 - GitHub stable-release discovery and exact named release asset selection;
 - SHA-256 package verification;
 - preservation of the native WordPress per-plugin automatic-update preference;
