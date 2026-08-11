@@ -80,23 +80,18 @@ jobs:
           set -euo pipefail
           printf '## tagDiv Liveblog %s\n\n' "$VERSION" > dist/release-notes.md
           cat >> dist/release-notes.md <<'EOF'
-          This maintenance release fixes metadata-prefix alignment in the TagDiv Liveblog presentation layer without changing Automattic Liveblog markup or runtime behavior.
+          This maintenance release updates the WordPress plugin author metadata without changing runtime behavior.
 
-          Fixes:
-          - Timestamp prefix now appears horizontally beside the time metadata instead of above it.
-          - In `Both` time mode, the prefix sits beside the existing relative/exact time stack while that stack remains vertically arranged.
-          - Author prefix now appears in the first author row beside the avatar/name instead of above the author metadata.
-          - Stacked and inline metadata layouts, metadata order, separators and left/center/right alignment remain unchanged.
+          Changes:
+          - the plugin author is now shown as `OmniaTV`;
+          - the author name links to `https://omniatv.com` through the standard WordPress `Author URI` header;
+          - `Plugin URI` and `Update URI` continue to point to the GitHub repository;
+          - no rendering, Liveblog, Composer, updater, CSS or JavaScript behavior changes are included.
 
-          Regression validation:
-          - exact time with timestamp prefix;
-          - `Both` time mode with timestamp prefix;
-          - author prefix with avatar/name;
-          - inline metadata with separator;
-          - stacked metadata;
-          - pagination, archived notice, Archive/Reopen controls and numeric entry deep links remain unaffected.
-
-          Validated on OmniaTV with WordPress 7.0.3, PHP 8.3.6, Newspaper 12.7.7, tagDiv Composer 5.4.6 and Automattic Liveblog 1.12.2.
+          Validation:
+          - wp-admin → Plugins displays `OmniaTV` as the author;
+          - the author link opens `https://omniatv.com`;
+          - the plugin remains active and existing Liveblog behavior is unchanged.
           EOF
 
       - name: Create GitHub release
