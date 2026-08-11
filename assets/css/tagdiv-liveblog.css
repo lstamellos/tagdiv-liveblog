@@ -55,6 +55,36 @@
 	--tdlb-meta-separator-content: "";
 	--tdlb-author-prefix-content: "";
 	--tdlb-timestamp-prefix-content: "";
+	--tdlb-key-entry-bg: transparent;
+	--tdlb-key-entry-color: inherit;
+	--tdlb-key-entry-border-color: currentColor;
+	--tdlb-key-entry-border-width: 0px;
+	--tdlb-key-entry-border-style: solid;
+	--tdlb-key-entry-radius: 0px;
+	--tdlb-key-entry-accent-color: currentColor;
+	--tdlb-key-entry-accent-width: 3px;
+	--tdlb-key-label-display: none;
+	--tdlb-key-label-content: "Κύριο σημείο";
+	--tdlb-key-label-bg: transparent;
+	--tdlb-key-label-color: inherit;
+	--tdlb-key-label-font-size: 12px;
+	--tdlb-key-label-font-weight: 700;
+	--tdlb-key-label-letter-spacing: 0px;
+	--tdlb-key-label-margin-bottom: 8px;
+	--tdlb-key-summary-bg: transparent;
+	--tdlb-key-summary-color: inherit;
+	--tdlb-key-summary-border-color: currentColor;
+	--tdlb-key-summary-border-width: 1px;
+	--tdlb-key-summary-border-style: solid;
+	--tdlb-key-summary-radius: 0px;
+	--tdlb-key-summary-padding: 16px;
+	--tdlb-key-summary-margin-bottom: 24px;
+	--tdlb-key-summary-title-size: 20px;
+	--tdlb-key-summary-title-weight: 700;
+	--tdlb-key-summary-item-gap: 10px;
+	--tdlb-key-summary-item-padding: 10px 0;
+	--tdlb-key-summary-item-border-color: currentColor;
+	--tdlb-key-summary-item-border-width: 0px;
 	position: relative;
 	border: 0;
 	outline: 0;
@@ -77,6 +107,56 @@
 	letter-spacing: var(--tdlb-archive-notice-letter-spacing);
 	text-align: var(--tdlb-archive-notice-text-align);
 	text-transform: var(--tdlb-archive-notice-text-transform);
+}
+
+.tdlb-liveblog .tdlb-key-events {
+	box-sizing: border-box;
+	width: 100%;
+	margin: 0 0 var(--tdlb-key-summary-margin-bottom);
+	padding: var(--tdlb-key-summary-padding);
+	color: var(--tdlb-key-summary-color);
+	background: var(--tdlb-key-summary-bg);
+	border: var(--tdlb-key-summary-border-width) var(--tdlb-key-summary-border-style) var(--tdlb-key-summary-border-color);
+	border-radius: var(--tdlb-key-summary-radius);
+}
+
+.tdlb-liveblog .tdlb-key-events .widget-title {
+	margin: 0 0 12px;
+	color: inherit;
+	font-size: var(--tdlb-key-summary-title-size);
+	font-weight: var(--tdlb-key-summary-title-weight);
+	line-height: 1.25;
+}
+
+.tdlb-liveblog .tdlb-key-events .liveblog-events {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.tdlb-liveblog .tdlb-key-events .liveblog-event {
+	margin: 0;
+	padding: var(--tdlb-key-summary-item-padding);
+	border-bottom: var(--tdlb-key-summary-item-border-width) solid var(--tdlb-key-summary-item-border-color);
+}
+
+.tdlb-liveblog .tdlb-key-events .liveblog-event + .liveblog-event {
+	margin-top: var(--tdlb-key-summary-item-gap);
+}
+
+.tdlb-liveblog .tdlb-key-events .liveblog-event:last-child {
+	border-bottom-width: 0;
+}
+
+.tdlb-liveblog .tdlb-key-events .liveblog-event-meta {
+	margin-bottom: 4px;
+	font-size: 0.875em;
+	opacity: 0.72;
+}
+
+.tdlb-liveblog .tdlb-key-events .liveblog-event-content {
+	color: inherit;
+	cursor: pointer;
 }
 
 .tdlb-liveblog #wpcom-liveblog-container,
@@ -122,6 +202,34 @@
 	background: var(--tdlb-entry-bg);
 	border: var(--tdlb-entry-border-width) solid var(--tdlb-entry-border-color);
 	border-radius: var(--tdlb-entry-radius);
+}
+
+.tdlb-liveblog[data-key-highlight="1"] .liveblog-entry.type-key {
+	color: var(--tdlb-key-entry-color);
+	background: var(--tdlb-key-entry-bg);
+	border-color: var(--tdlb-key-entry-border-color);
+	border-width: var(--tdlb-key-entry-border-width);
+	border-style: var(--tdlb-key-entry-border-style);
+	border-radius: var(--tdlb-key-entry-radius);
+	border-inline-start-width: var(--tdlb-key-entry-accent-width);
+	border-inline-start-color: var(--tdlb-key-entry-accent-color);
+}
+
+.tdlb-liveblog[data-key-highlight="1"] .liveblog-entry.type-key::before {
+	content: var(--tdlb-key-label-content);
+	display: var(--tdlb-key-label-display);
+	order: 0;
+	flex: 0 0 100%;
+	box-sizing: border-box;
+	margin: 0 0 var(--tdlb-key-label-margin-bottom);
+	padding: 0;
+	color: var(--tdlb-key-label-color);
+	background: var(--tdlb-key-label-bg);
+	font-size: var(--tdlb-key-label-font-size);
+	font-weight: var(--tdlb-key-label-font-weight);
+	letter-spacing: var(--tdlb-key-label-letter-spacing);
+	line-height: 1.2;
+	text-transform: uppercase;
 }
 
 .tdlb-liveblog .liveblog-entry:last-child {
