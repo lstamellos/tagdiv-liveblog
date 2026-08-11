@@ -80,22 +80,22 @@ jobs:
           set -euo pipefail
           printf '## tagDiv Liveblog %s\n\n' "$VERSION" > dist/release-notes.md
           cat >> dist/release-notes.md <<'EOF'
-          This release adds native Automattic Liveblog Key Events presentation to the tagDiv Composer integration while keeping Automattic Liveblog authoritative for Key Event state and behavior.
+          This release fixes WordPress native per-plugin automatic-update controls for tagDiv Liveblog when the installed GitHub release is already current.
 
           Changes:
-          - adds an optional native Key Events summary above the integrated Liveblog feed;
-          - adds Composer controls for summary, authoritative key-entry highlight and configurable key-entry label presentation;
-          - uses Automattic Liveblog's runtime `.is-key-event` marker rather than stale `.type-key` comment classes for real frontend state;
-          - preserves native Key Event navigation, editor-side removal, confirmation UI and per-post content format;
-          - hides an empty Key Events summary automatically;
-          - preserves Key Events presentation across archive/reopen transitions while respecting upstream editability rules.
+          - always returns valid GitHub release metadata to the WordPress Update URI provider when release lookup succeeds;
+          - lets WordPress Core place current releases in `no_update` instead of making the plugin appear update-unsupported;
+          - restores the native Enable/Disable auto-updates control in wp-admin for current installations;
+          - keeps the site owner's normal per-plugin automatic-update preference authoritative;
+          - does not force `autoupdate` and does not override the `auto_update_plugin` policy;
+          - preserves verified GitHub release asset selection and SHA-256 package verification.
 
           Validation:
-          - exactly one native `#liveblog-key-events` mount and one Liveblog runtime;
-          - native summary rendering, jump/pagination and selected-event removal;
-          - authoritative highlight/label behavior with stale `.type-key` classes present;
-          - native removal confirmation and post-reload state reconciliation;
-          - active → archive → reopen behavior with the archived notice and Key Event editor controls changing correctly.
+          - current installed version receives update metadata suitable for Core `no_update` handling;
+          - older installed versions still receive normal update metadata for Core `response` handling;
+          - no updater metadata is returned for unrelated plugins;
+          - existing automatic-update preferences remain unchanged;
+          - release ZIP naming and checksum verification remain unchanged.
           EOF
 
       - name: Create GitHub release
