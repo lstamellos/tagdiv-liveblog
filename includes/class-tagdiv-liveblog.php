@@ -141,7 +141,7 @@ final class Tagdiv_Liveblog_Plugin {
 				'value'       => 'Η ανταπόκριση έχει ολοκληρωθεί',
 				'std'         => 'Η ανταπόκριση έχει ολοκληρωθεί',
 				'heading'     => __( 'Archived notice text', 'tagdiv-liveblog' ),
-				'description' => __( 'Plain-text message shown above an archived Liveblog on every native pagination page.', 'tagdiv-liveblog' ),
+				'description' => __( 'Plain-text message shown above an archived Liveblog on every native Liveblog pagination page.', 'tagdiv-liveblog' ),
 				'holder'      => 'div',
 				'group'       => __( 'Archived notice', 'tagdiv-liveblog' ),
 			),
@@ -205,7 +205,7 @@ final class Tagdiv_Liveblog_Plugin {
 				'none'
 			),
 
-			// Key Events: native summary plus presentation of upstream .type-key entries.
+			// Key Events: native upstream summary plus optional presentation of authoritative key entries.
 			self::choice_param(
 				'key_events_summary',
 				__( 'Key Events summary', 'tagdiv-liveblog' ),
@@ -479,6 +479,14 @@ final class Tagdiv_Liveblog_Plugin {
 		);
 	}
 
+	/**
+	 * Build a colorpicker parameter.
+	 *
+	 * @param string $name  Parameter name.
+	 * @param string $label Label.
+	 * @param string $group Group.
+	 * @return array<string,mixed>
+	 */
 	private static function color_param( $name, $label, $group ) {
 		return array(
 			'param_name' => $name,
@@ -489,6 +497,15 @@ final class Tagdiv_Liveblog_Plugin {
 		);
 	}
 
+	/**
+	 * Build a numeric text field parameter, interpreted as pixels.
+	 *
+	 * @param string $name    Parameter name.
+	 * @param string $label   Label.
+	 * @param string $group   Group.
+	 * @param int    $default Default value.
+	 * @return array<string,mixed>
+	 */
 	private static function number_param( $name, $label, $group, $default ) {
 		return array(
 			'param_name'  => $name,
@@ -502,6 +519,16 @@ final class Tagdiv_Liveblog_Plugin {
 		);
 	}
 
+	/**
+	 * Build a dropdown parameter.
+	 *
+	 * @param string               $name    Parameter name.
+	 * @param string               $label   Label.
+	 * @param string               $group   Group.
+	 * @param array<string,string> $values  Display labels mapped to values.
+	 * @param string               $default Default value.
+	 * @return array<string,mixed>
+	 */
 	private static function choice_param( $name, $label, $group, $values, $default ) {
 		return array(
 			'param_name' => $name,
@@ -513,6 +540,15 @@ final class Tagdiv_Liveblog_Plugin {
 		);
 	}
 
+	/**
+	 * Build top/bottom placement control.
+	 *
+	 * @param string $name    Parameter name.
+	 * @param string $label   Label.
+	 * @param string $group   Group.
+	 * @param string $default Default value.
+	 * @return array<string,mixed>
+	 */
 	private static function position_param( $name, $label, $group, $default ) {
 		return array(
 			'param_name' => $name,
@@ -527,6 +563,15 @@ final class Tagdiv_Liveblog_Plugin {
 		);
 	}
 
+	/**
+	 * Build horizontal alignment control.
+	 *
+	 * @param string $name    Parameter name.
+	 * @param string $label   Label.
+	 * @param string $group   Group.
+	 * @param string $default Default value.
+	 * @return array<string,mixed>
+	 */
 	private static function alignment_param( $name, $label, $group, $default ) {
 		return array(
 			'param_name' => $name,
@@ -606,17 +651,29 @@ final class Tagdiv_Liveblog_Plugin {
 		}
 	}
 
+	/**
+	 * Whether this request is the tagDiv live editor or its AJAX renderer.
+	 *
+	 * @return bool
+	 */
 	public static function is_composer_request() {
 		if ( ! class_exists( 'td_util' ) ) {
 			return false;
 		}
 
-		$iframe = method_exists( 'td_util', 'tdc_is_live_editor_iframe' ) && td_util::tdc_is_live_editor_iframe();
-		$ajax   = method_exists( 'td_util', 'tdc_is_live_editor_ajax' ) && td_util::tdc_is_live_editor_ajax();
+		$iframe = method_exists( 'td_util', 'tdc_is_live_editor_iframe' )
+			&& td_util::tdc_is_live_editor_iframe();
+		$ajax   = method_exists( 'td_util', 'tdc_is_live_editor_ajax' )
+			&& td_util::tdc_is_live_editor_ajax();
 
 		return $iframe || $ajax;
 	}
 
+	/**
+	 * Get the actual Liveblog post ID for this request.
+	 *
+	 * @return int
+	 */
 	public static function get_liveblog_post_id() {
 		if ( class_exists( 'WPCOM_Liveblog' ) ) {
 			$post_id = absint( WPCOM_Liveblog::$post_id );
@@ -632,6 +689,11 @@ final class Tagdiv_Liveblog_Plugin {
 		return absint( get_queried_object_id() );
 	}
 
+	/**
+	 * Get the normalized Liveblog state for the resolved article.
+	 *
+	 * @return string|false
+	 */
 	public static function get_liveblog_state() {
 		if ( ! class_exists( 'WPCOM_Liveblog' ) ) {
 			return false;
@@ -650,14 +712,33 @@ final class Tagdiv_Liveblog_Plugin {
 		return is_string( $state ) ? $state : false;
 	}
 
+	/**
+	 * Whether the resolved post has an active or archived Liveblog state.
+	 *
+	 * @return bool
+	 */
 	public static function is_liveblog_post() {
 		return in_array( self::get_liveblog_state(), array( 'enable', 'archive' ), true );
 	}
 
+	/**
+	 * Whether the resolved post is an archived Liveblog.
+	 *
+	 * @return bool
+	 */
 	public static function is_archived_liveblog_post() {
 		return 'archive' === self::get_liveblog_state();
 	}
 
+	/**
+	 * Whether the current user may change the current Liveblog state.
+	 *
+	 * Prefer the post-scoped capability helper provided by Automattic Liveblog
+	 * 1.12.x. The fallback keeps this adapter usable with older compatible
+	 * releases while still authorising against the specific post.
+	 *
+	 * @return bool
+	 */
 	public static function current_user_can_manage_liveblog() {
 		if ( ! is_user_logged_in() || ! class_exists( 'WPCOM_Liveblog' ) ) {
 			return false;
