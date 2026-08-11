@@ -36,6 +36,13 @@ final class Tagdiv_Liveblog_Updater {
 	/**
 	 * Supply update metadata for this plugin's Update URI host.
 	 *
+	 * Always return valid release metadata when GitHub lookup succeeds, including
+	 * when the installed version is already current. WordPress Core compares the
+	 * returned version with the installed version and stores current releases in
+	 * the `no_update` response. That metadata is required for Core to recognise
+	 * this third-party plugin as update-supported and expose the native per-plugin
+	 * automatic-update control.
+	 *
 	 * Do not set the optional `autoupdate` response key. Core will therefore use
 	 * the user's native per-plugin auto-update preference unchanged.
 	 *
@@ -55,10 +62,6 @@ final class Tagdiv_Liveblog_Updater {
 		$release = self::get_latest_release();
 		if ( is_wp_error( $release ) || empty( $release['version'] ) ) {
 			return $update;
-		}
-
-		if ( version_compare( $release['version'], TAGDIV_LIVEBLOG_VERSION, '<=' ) ) {
-			return false;
 		}
 
 		return array(
