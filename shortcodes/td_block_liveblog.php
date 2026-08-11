@@ -115,10 +115,20 @@ class td_block_liveblog extends td_block {
 
 		$is_composer = Tagdiv_Liveblog_Plugin::is_composer_request();
 
+		/*
+		 * A Global Single template may contain this block for every article.
+		 * Keep the Composer preview available while emitting no frontend wrapper,
+		 * header, spacing or slot at all for posts that are not Liveblog posts.
+		 */
 		if ( ! $is_composer && ! Tagdiv_Liveblog_Plugin::is_liveblog_post() ) {
 			return '';
 		}
 
+		/*
+		 * Suppress tagDiv's implicit block-template top separator. The native
+		 * tdc_css / Design Options panel remains fully available and is the
+		 * authoritative whole-block CSS surface.
+		 */
 		$classes = preg_replace( '/\btd-pb-border-top\b/', '', $this->get_block_classes() );
 		$classes = trim( preg_replace( '/\s+/', ' ', (string) $classes ) ) . ' tdlb-block';
 
@@ -142,10 +152,21 @@ class td_block_liveblog extends td_block {
 
 		$buffy .= '<div class="tdlb-liveblog" data-tagdiv-liveblog-slot="1" data-liveblog-post-id="' . esc_attr( (string) absint( $post_id ) ) . '" data-liveblog-entries-per-page="' . esc_attr( (string) $entries_per_page ) . '" data-key-highlight="' . esc_attr( $key_highlight ) . '"' . ( $style ? ' style="' . esc_attr( $style ) . '"' : '' ) . '>';
 
+		/*
+		 * Frontend state management is only a convenience UI. The actual mutation
+		 * is performed by Automattic Liveblog's existing authenticated AJAX handler,
+		 * which repeats the nonce and post-scoped capability checks server-side.
+		 */
 		if ( ! $is_composer && Tagdiv_Liveblog_Plugin::current_user_can_manage_liveblog() ) {
 			$buffy .= $this->render_management_control( Tagdiv_Liveblog_Plugin::get_liveblog_state() );
 		}
 
+		/*
+		 * Keep the archived-state message outside Liveblog's React feed. Native
+		 * pagination replaces the feed entries but leaves this notice untouched,
+		 * so it remains at the top on every page. In Composer it is always shown as
+		 * a styling preview; on the frontend it exists only for archive state.
+		 */
 		if ( $is_composer || Tagdiv_Liveblog_Plugin::is_archived_liveblog_post() ) {
 			$preview_attribute = $is_composer ? ' data-tdlb-archive-notice-preview="1"' : '';
 			$buffy            .= '<div class="tdlb-archive-notice"' . $preview_attribute . '>' . esc_html( $this->get_archive_notice_text( $post_id ) ) . '</div>';
@@ -175,6 +196,12 @@ class td_block_liveblog extends td_block {
 			$message = __( 'Η ανταπόκριση έχει ολοκληρωθεί', 'tagdiv-liveblog' );
 		}
 
+		/**
+		 * Filter the archived Liveblog notice text.
+		 *
+		 * @param string $message Notice text.
+		 * @param int    $post_id Liveblog post ID.
+		 */
 		$message = apply_filters( 'tagdiv_liveblog_archive_notice_text', $message, absint( $post_id ) );
 
 		return wp_strip_all_tags( (string) $message );
@@ -267,11 +294,31 @@ class td_block_liveblog extends td_block {
 		$this->add_px_variable( $variables, '--tdlb-archive-notice-font-size', 'archive_notice_font_size' );
 		$this->add_px_variable( $variables, '--tdlb-archive-notice-line-height', 'archive_notice_line_height' );
 		$this->add_px_variable( $variables, '--tdlb-archive-notice-letter-spacing', 'archive_notice_letter_spacing' );
-		$variables[] = '--tdlb-archive-notice-border-style:' . $this->sanitize_choice( $this->get_shortcode_att( 'archive_notice_border_style' ), array( 'solid', 'dashed', 'dotted', 'double', 'none' ), 'solid' );
-		$variables[] = '--tdlb-archive-notice-font-weight:' . $this->sanitize_choice( $this->get_shortcode_att( 'archive_notice_font_weight' ), array( '400', '500', '600', '700', '800' ), '600' );
-		$variables[] = '--tdlb-archive-notice-font-style:' . $this->sanitize_choice( $this->get_shortcode_att( 'archive_notice_font_style' ), array( 'normal', 'italic' ), 'normal' );
-		$variables[] = '--tdlb-archive-notice-text-align:' . $this->sanitize_choice( $this->get_shortcode_att( 'archive_notice_text_align' ), array( 'left', 'center', 'right' ), 'left' );
-		$variables[] = '--tdlb-archive-notice-text-transform:' . $this->sanitize_choice( $this->get_shortcode_att( 'archive_notice_text_transform' ), array( 'none', 'uppercase', 'lowercase', 'capitalize' ), 'none' );
+		$variables[] = '--tdlb-archive-notice-border-style:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'archive_notice_border_style' ),
+			array( 'solid', 'dashed', 'dotted', 'double', 'none' ),
+			'solid'
+		);
+		$variables[] = '--tdlb-archive-notice-font-weight:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'archive_notice_font_weight' ),
+			array( '400', '500', '600', '700', '800' ),
+			'600'
+		);
+		$variables[] = '--tdlb-archive-notice-font-style:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'archive_notice_font_style' ),
+			array( 'normal', 'italic' ),
+			'normal'
+		);
+		$variables[] = '--tdlb-archive-notice-text-align:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'archive_notice_text_align' ),
+			array( 'left', 'center', 'right' ),
+			'left'
+		);
+		$variables[] = '--tdlb-archive-notice-text-transform:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'archive_notice_text_transform' ),
+			array( 'none', 'uppercase', 'lowercase', 'capitalize' ),
+			'none'
+		);
 
 		$this->add_color_variable( $variables, '--tdlb-key-summary-bg', 'key_summary_background' );
 		$this->add_color_variable( $variables, '--tdlb-key-summary-color', 'key_summary_text_color' );
@@ -284,8 +331,16 @@ class td_block_liveblog extends td_block {
 		$this->add_px_variable( $variables, '--tdlb-key-summary-item-gap', 'key_summary_item_gap' );
 		$this->add_color_variable( $variables, '--tdlb-key-summary-item-border-color', 'key_summary_item_border_color' );
 		$this->add_px_variable( $variables, '--tdlb-key-summary-item-border-width', 'key_summary_item_border_width' );
-		$variables[] = '--tdlb-key-summary-border-style:' . $this->sanitize_choice( $this->get_shortcode_att( 'key_summary_border_style' ), array( 'solid', 'dashed', 'dotted', 'double', 'none' ), 'solid' );
-		$variables[] = '--tdlb-key-summary-title-weight:' . $this->sanitize_choice( $this->get_shortcode_att( 'key_summary_title_weight' ), array( '400', '500', '600', '700', '800' ), '700' );
+		$variables[] = '--tdlb-key-summary-border-style:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'key_summary_border_style' ),
+			array( 'solid', 'dashed', 'dotted', 'double', 'none' ),
+			'solid'
+		);
+		$variables[] = '--tdlb-key-summary-title-weight:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'key_summary_title_weight' ),
+			array( '400', '500', '600', '700', '800' ),
+			'700'
+		);
 
 		$this->add_color_variable( $variables, '--tdlb-key-entry-bg', 'key_entry_background' );
 		$this->add_color_variable( $variables, '--tdlb-key-entry-color', 'key_entry_text_color' );
@@ -294,13 +349,21 @@ class td_block_liveblog extends td_block {
 		$this->add_px_variable( $variables, '--tdlb-key-entry-radius', 'key_entry_radius' );
 		$this->add_color_variable( $variables, '--tdlb-key-entry-accent-color', 'key_entry_accent_color' );
 		$this->add_px_variable( $variables, '--tdlb-key-entry-accent-width', 'key_entry_accent_width' );
-		$variables[] = '--tdlb-key-entry-border-style:' . $this->sanitize_choice( $this->get_shortcode_att( 'key_entry_border_style' ), array( 'solid', 'dashed', 'dotted', 'double', 'none' ), 'solid' );
+		$variables[] = '--tdlb-key-entry-border-style:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'key_entry_border_style' ),
+			array( 'solid', 'dashed', 'dotted', 'double', 'none' ),
+			'solid'
+		);
 		$this->add_color_variable( $variables, '--tdlb-key-label-bg', 'key_label_background' );
 		$this->add_color_variable( $variables, '--tdlb-key-label-color', 'key_label_text_color' );
 		$this->add_px_variable( $variables, '--tdlb-key-label-font-size', 'key_label_font_size' );
 		$this->add_px_variable( $variables, '--tdlb-key-label-letter-spacing', 'key_label_letter_spacing' );
 		$this->add_px_variable( $variables, '--tdlb-key-label-margin-bottom', 'key_label_margin_bottom' );
-		$variables[] = '--tdlb-key-label-font-weight:' . $this->sanitize_choice( $this->get_shortcode_att( 'key_label_font_weight' ), array( '400', '500', '600', '700', '800' ), '700' );
+		$variables[] = '--tdlb-key-label-font-weight:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'key_label_font_weight' ),
+			array( '400', '500', '600', '700', '800' ),
+			'700'
+		);
 		$variables[] = '--tdlb-key-label-display:' . ( 'yes' === $this->get_shortcode_att( 'key_label' ) ? 'block' : 'none' );
 		$this->add_content_variable( $variables, '--tdlb-key-label-content', 'key_label_text' );
 
@@ -325,7 +388,11 @@ class td_block_liveblog extends td_block {
 		$this->add_px_variable( $variables, '--tdlb-content-border-width', 'content_border_width' );
 		$this->add_px_variable( $variables, '--tdlb-content-radius', 'content_radius' );
 		$this->add_px_variable( $variables, '--tdlb-content-padding', 'content_padding' );
-		$variables[] = '--tdlb-content-border-style:' . $this->sanitize_choice( $this->get_shortcode_att( 'content_border_style' ), array( 'solid', 'dashed', 'dotted', 'double', 'none' ), 'solid' );
+		$variables[] = '--tdlb-content-border-style:' . $this->sanitize_choice(
+			$this->get_shortcode_att( 'content_border_style' ),
+			array( 'solid', 'dashed', 'dotted', 'double', 'none' ),
+			'solid'
+		);
 
 		$this->add_color_variable( $variables, '--tdlb-timeline-color', 'timeline_color' );
 		$this->add_px_variable( $variables, '--tdlb-timeline-width', 'timeline_width' );
@@ -367,9 +434,15 @@ class td_block_liveblog extends td_block {
 		$variables[] = '--tdlb-content-order:50';
 		$variables[] = '--tdlb-timeline-display:' . ( 'yes' === $this->get_shortcode_att( 'timeline' ) ? 'block' : 'none' );
 
-		$separator_enabled = 'inline' === $meta_layout && $author_meta && $show_time && '' !== trim( (string) $this->get_shortcode_att( 'meta_separator' ) );
-		$variables[]       = '--tdlb-author-separator-display:' . ( $separator_enabled && $author_first ? 'inline-block' : 'none' );
-		$variables[]       = '--tdlb-time-separator-display:' . ( $separator_enabled && ! $author_first ? 'inline-block' : 'none' );
+		$separator_enabled = (
+			'inline' === $meta_layout
+			&& $author_meta
+			&& $show_time
+			&& '' !== trim( (string) $this->get_shortcode_att( 'meta_separator' ) )
+		);
+
+		$variables[] = '--tdlb-author-separator-display:' . ( $separator_enabled && $author_first ? 'inline-block' : 'none' );
+		$variables[] = '--tdlb-time-separator-display:' . ( $separator_enabled && ! $author_first ? 'inline-block' : 'none' );
 
 		$this->add_content_variable( $variables, '--tdlb-meta-separator-content', 'meta_separator' );
 		$this->add_content_variable( $variables, '--tdlb-author-prefix-content', 'author_prefix' );
@@ -378,6 +451,14 @@ class td_block_liveblog extends td_block {
 		return implode( ';', $variables ) . ';';
 	}
 
+	/**
+	 * Add a CSS color custom property.
+	 *
+	 * @param array<int,string> $variables CSS custom property declarations.
+	 * @param string            $css_name  CSS custom property name.
+	 * @param string            $att_name  Shortcode attribute name.
+	 * @return void
+	 */
 	private function add_color_variable( &$variables, $css_name, $att_name ) {
 		$value = $this->sanitize_color_value( $this->get_shortcode_att( $att_name ) );
 		if ( '' !== $value ) {
@@ -385,6 +466,14 @@ class td_block_liveblog extends td_block {
 		}
 	}
 
+	/**
+	 * Add a quoted CSS content custom property.
+	 *
+	 * @param array<int,string> $variables CSS custom property declarations.
+	 * @param string            $css_name  CSS custom property name.
+	 * @param string            $att_name  Shortcode attribute name.
+	 * @return void
+	 */
 	private function add_content_variable( &$variables, $css_name, $att_name ) {
 		$value = wp_strip_all_tags( trim( (string) $this->get_shortcode_att( $att_name ) ) );
 		$value = preg_replace( '/[\x00-\x1F\x7F]/u', '', $value );
@@ -394,52 +483,91 @@ class td_block_liveblog extends td_block {
 		if ( strlen( $value ) > 64 ) {
 			$value = substr( $value, 0, 64 );
 		}
-		$encoded     = wp_json_encode( $value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+
+		$encoded = wp_json_encode( $value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
 		$variables[] = $css_name . ':' . ( is_string( $encoded ) ? $encoded : '""' );
 	}
 
+	/**
+	 * Validate a color value emitted by tagDiv Composer.
+	 *
+	 * @param mixed $value Raw shortcode attribute.
+	 * @return string
+	 */
 	private function sanitize_color_value( $value ) {
 		$value = trim( (string) $value );
 		if ( '' === $value ) {
 			return '';
 		}
-		if ( preg_match( '/^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i', $value ) || preg_match( '/^#[0-9a-f]{4}(?:[0-9a-f]{4})?$/i', $value ) ) {
+
+		if ( preg_match( '/^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i', $value ) ) {
 			return $value;
 		}
+
+		if ( preg_match( '/^#[0-9a-f]{4}(?:[0-9a-f]{4})?$/i', $value ) ) {
+			return $value;
+		}
+
 		if ( preg_match( '/^var\(--[a-z0-9_-]+\)$/i', $value ) ) {
 			return $value;
 		}
+
 		if ( in_array( strtolower( $value ), array( 'transparent', 'currentcolor' ), true ) ) {
 			return $value;
 		}
+
 		if ( preg_match( '/^rgba?\((.+)\)$/i', $value, $matches ) ) {
 			$parts = array_map( 'trim', explode( ',', $matches[1] ) );
 			if ( 3 !== count( $parts ) && 4 !== count( $parts ) ) {
 				return '';
 			}
+
 			for ( $i = 0; $i < 3; $i++ ) {
-				if ( ! preg_match( '/^\d{1,3}$/', $parts[ $i ] ) || (int) $parts[ $i ] > 255 ) {
+				if ( ! preg_match( '/^\d{1,3}$/', $parts[ $i ] ) ) {
+					return '';
+				}
+
+				$channel = (int) $parts[ $i ];
+				if ( $channel < 0 || $channel > 255 ) {
 					return '';
 				}
 			}
+
 			if ( 4 === count( $parts ) ) {
 				if ( ! is_numeric( $parts[3] ) ) {
 					return '';
 				}
+
 				$alpha = (float) $parts[3];
 				if ( $alpha < 0 || $alpha > 1 ) {
 					return '';
 				}
 			}
+
 			return $value;
 		}
+
 		return '';
 	}
 
+	/**
+	 * Add a pixel custom property.
+	 *
+	 * @param array<int,string> $variables CSS custom property declarations.
+	 * @param string            $css_name  CSS custom property name.
+	 * @param string            $att_name  Shortcode attribute name.
+	 * @return void
+	 */
 	private function add_px_variable( &$variables, $css_name, $att_name ) {
 		$variables[] = $css_name . ':' . absint( $this->get_shortcode_att( $att_name ) ) . 'px';
 	}
 
+	/**
+	 * Translate alignment to flex justification.
+	 *
+	 * @param mixed $alignment Alignment.
+	 * @return string
+	 */
 	private function alignment_to_flex( $alignment ) {
 		$alignment = $this->sanitize_choice( $alignment, array( 'left', 'center', 'right' ), 'left' );
 		if ( 'center' === $alignment ) {
@@ -451,6 +579,14 @@ class td_block_liveblog extends td_block {
 		return 'flex-start';
 	}
 
+	/**
+	 * Sanitize an enum value.
+	 *
+	 * @param mixed         $value   Raw value.
+	 * @param array<string> $allowed Allowed values.
+	 * @param string        $default Default value.
+	 * @return string
+	 */
 	private function sanitize_choice( $value, $allowed, $default ) {
 		$value = sanitize_key( (string) $value );
 		return in_array( $value, $allowed, true ) ? $value : $default;
@@ -503,6 +639,7 @@ class td_block_liveblog extends td_block {
 		}
 
 		$out .= '</div>';
+
 		return $out;
 	}
 }
