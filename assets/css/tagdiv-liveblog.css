@@ -109,6 +109,11 @@
 	text-transform: var(--tdlb-archive-notice-text-transform);
 }
 
+.tdlb-liveblog .tdlb-key-events:has(> #liveblog-key-events:empty),
+.tdlb-liveblog .tdlb-key-events:has(.liveblog-events:empty) {
+	display: none;
+}
+
 .tdlb-liveblog .tdlb-key-events {
 	box-sizing: border-box;
 	width: 100%;
