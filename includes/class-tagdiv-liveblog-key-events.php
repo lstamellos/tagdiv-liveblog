@@ -43,7 +43,12 @@ final class Tagdiv_Liveblog_Key_Events {
 	}
 
 	/**
-	 * Return the first non-empty visual paragraph/block as plain text.
+	 * Return the first non-empty editorial paragraph/block as plain text.
+	 *
+	 * Liveblog command tokens such as /key are stored as semantic command spans,
+	 * for example <span class="liveblog-command type-key">key</span>. Those spans
+	 * are control metadata rather than editorial content, so remove them before
+	 * selecting the first visual block.
 	 *
 	 * @param string $content Liveblog entry HTML/content.
 	 * @return string
@@ -54,14 +59,24 @@ final class Tagdiv_Liveblog_Key_Events {
 			return '';
 		}
 
-		$normalized = preg_replace(
-			'/<br\s*\/?\s*>|<\/p\s*>|<\/div\s*>|<\/h[1-6]\s*>|<\/li\s*>|\r\n|\r|\n/i',
-			"\n",
+		$editorial_content = preg_replace(
+			'~<span\b[^>]*class=(["\'])[^"\']*\bliveblog-command\b[^"\']*\1[^>]*>.*?</span>~is',
+			'',
 			$content
 		);
 
+		if ( ! is_string( $editorial_content ) ) {
+			$editorial_content = $content;
+		}
+
+		$normalized = preg_replace(
+			'/<br\s*\/?\s*>|<\/p\s*>|<\/div\s*>|<\/h[1-6]\s*>|<\/li\s*>|\r\n|\r|\n/i',
+			"\n",
+			$editorial_content
+		);
+
 		if ( ! is_string( $normalized ) ) {
-			return trim( wp_strip_all_tags( $content ) );
+			return trim( wp_strip_all_tags( $editorial_content ) );
 		}
 
 		$blocks = preg_split( '/\n+/', $normalized );
@@ -72,8 +87,7 @@ final class Tagdiv_Liveblog_Key_Events {
 					return $text;
 				}
 		}
-		}
 
-		return trim( wp_strip_all_tags( $content ) );
+		return trim( wp_strip_all_tags( $editorial_content ) );
 	}
 }
