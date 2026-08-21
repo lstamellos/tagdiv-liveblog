@@ -24,7 +24,7 @@ jobs:
           set -euo pipefail
           version="$(php -r '
               $source = file_get_contents("tagdiv-liveblog.php");
-              if (!preg_match("/^ \* Version:\\s*([^\\s]+)$/m", $source, $matches)) {
+              if (!preg_match("/^ \\* Version:\\s*([^\\s]+)$/m", $source, $matches)) {
                   fwrite(STDERR, "Unable to read plugin version\n");
                   exit(1);
               }
@@ -71,33 +71,6 @@ jobs:
             sha256sum "tagdiv-liveblog-${VERSION}.zip" > "tagdiv-liveblog-${VERSION}.zip.sha256"
           )
 
-      - name: Write release notes
-        if: steps.existing_release.outputs.exists != 'yes'
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          printf '## tagDiv Liveblog %s\n\n' "$VERSION" > dist/release-notes.md
-          cat >> dist/release-notes.md <<'EOF'
-          This release fixes WordPress native per-plugin automatic-update controls for tagDiv Liveblog when the installed GitHub release is already current.
-
-          Changes:
-          - always returns valid GitHub release metadata to the WordPress Update URI provider when release lookup succeeds;
-          - lets WordPress Core place current releases in `no_update` instead of making the plugin appear update-unsupported;
-          - restores the native Enable/Disable auto-updates control in wp-admin for current installations;
-          - keeps the site owner's normal per-plugin automatic-update preference authoritative;
-          - does not force `autoupdate` and does not override the `auto_update_plugin` policy;
-          - preserves verified GitHub release asset selection and SHA-256 package verification.
-
-          Validation:
-          - current installed version receives update metadata suitable for Core `no_update` handling;
-          - older installed versions still receive normal update metadata for Core `response` handling;
-          - no updater metadata is returned for unrelated plugins;
-          - existing automatic-update preferences remain unchanged;
-          - release ZIP naming and checksum verification remain unchanged.
-          EOF
-
       - name: Create GitHub release
         if: steps.existing_release.outputs.exists != 'yes'
         env:
@@ -112,4 +85,4 @@ jobs:
             "dist/tagdiv-liveblog-${VERSION}.zip.sha256" \
             --target "$GITHUB_SHA" \
             --title "tagDiv Liveblog ${VERSION}" \
-            --notes-file dist/release-notes.md
+            --generate-notes
