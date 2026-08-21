@@ -42,7 +42,7 @@ There is never a second Liveblog runtime or duplicate container, and no entry ma
 
 ## Composer controls
 
-Version 0.1.19 adds a `Key Events` control group while retaining the controls introduced in earlier releases:
+Version 0.1.21 retains the existing controls and extends the Key Events integration while preserving the native Automattic runtime:
 
 - native TagDiv Header settings (`custom_title`, `custom_url`, block header style);
 - native TagDiv Design Options / CSS settings for the whole block;
@@ -76,7 +76,11 @@ See [`docs/requirements.md`](docs/requirements.md) for the requirements map and 
 
 When `Key Events summary` is enabled, the adapter renders exactly one `#liveblog-key-events` portal target above the feed. Automattic Liveblog's existing React application detects that mount, loads Key Events through its own API and renders its native Key Events container into it. The adapter does not create a second Key Event store, endpoint, polling loop or renderer.
 
-The upstream per-post Key Event content format remains authoritative. Native Key Event navigation and editor-side removal also remain owned by Automattic Liveblog.
+Version 0.1.21 adds an HTML-aware `First Paragraph` Key Event format through Automattic Liveblog's official `liveblog_key_formats` extension point. It skips stored Liveblog command markup such as `/key` and returns the first editorial paragraph/block as plain text, while leaving the upstream formats unchanged.
+
+Automattic Liveblog 1.12.2 still stores the per-post Key Event `timeline` / `list` template setting, but its current React portal does not consume that setting. The adapter therefore reuses the same stored value strictly as a presentation hint over the native React DOM: `timeline` shows timestamp plus content, while `list` shows content only. No legacy PHP Key Event renderer is revived.
+
+Native Key Event navigation and editor-side removal remain owned by Automattic Liveblog.
 
 For feed presentation, the adapter uses Automattic Liveblog's runtime `.is-key-event` class, which reflects the authoritative `entry.key_event` value. Legacy/stale `.type-key` comment classes are not treated as current frontend Key Event state; `.type-key` is used only on the static Composer preview entry.
 
@@ -157,7 +161,7 @@ The Liveblog block can be placed in a Global Single Cloud Template. On posts wit
 
 ## Validated runtime
 
-Version 0.1.19 was validated on OmniaTV with:
+Version 0.1.21 was validated on OmniaTV with:
 
 - WordPress 7.0.3
 - PHP 8.3.6
@@ -177,6 +181,8 @@ Validation covers:
 - active → archive and archive → enable transitions with page reload;
 - native Key Events summary rendering and automatic hiding when empty;
 - native Key Event jump/pagination behavior;
+- HTML-aware First Paragraph Key Event summaries that skip Liveblog command markup;
+- restored timeline/list presentation semantics over the native React Key Events portal;
 - authoritative `.is-key-event` feed highlighting and configurable labels;
 - native Key Event removal confirmation and selected-event removal;
 - authoritative state reconciliation after reload;
