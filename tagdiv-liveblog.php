@@ -4,7 +4,7 @@
  * Plugin URI:        https://github.com/lstamellos/tagdiv-liveblog
  * Update URI:        https://github.com/lstamellos/tagdiv-liveblog
  * Description:       Integrates Automattic Liveblog with Newspaper/tagDiv Composer as a native configurable block.
- * Version:           0.1.21-rc2
+ * Version:           0.1.21-rc3
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            OmniaTV
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'TAGDIV_LIVEBLOG_VERSION', '0.1.21-rc2' );
+define( 'TAGDIV_LIVEBLOG_VERSION', '0.1.21-rc3' );
 define( 'TAGDIV_LIVEBLOG_FILE', __FILE__ );
 define( 'TAGDIV_LIVEBLOG_PATH', plugin_dir_path( __FILE__ ) );
 define( 'TAGDIV_LIVEBLOG_URL', plugin_dir_url( __FILE__ ) );
