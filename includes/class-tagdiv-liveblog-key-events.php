@@ -86,6 +86,7 @@ final class Tagdiv_Liveblog_Key_Events {
 				if ( '' !== $text ) {
 					return $text;
 				}
+			}
 		}
 
 		return trim( wp_strip_all_tags( $editorial_content ) );
