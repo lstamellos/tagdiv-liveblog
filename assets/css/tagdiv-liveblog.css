@@ -82,7 +82,7 @@
 	--tdlb-key-summary-title-size: 20px;
 	--tdlb-key-summary-title-weight: 700;
 	--tdlb-key-summary-item-gap: 10px;
-	--tdlb-key-summary-item-padding: 10px 0;
+	--tdlb-key-summary-item-padding: 12px 0;
 	--tdlb-key-summary-item-border-color: currentColor;
 	--tdlb-key-summary-item-border-width: 0px;
 	position: relative;
@@ -126,7 +126,7 @@
 }
 
 .tdlb-liveblog .tdlb-key-events .widget-title {
-	margin: 0 0 12px;
+	margin: 0 0 16px;
 	color: inherit;
 	font-size: var(--tdlb-key-summary-title-size);
 	font-weight: var(--tdlb-key-summary-title-weight);
@@ -134,34 +134,117 @@
 }
 
 .tdlb-liveblog .tdlb-key-events .liveblog-events {
+	display: grid;
+	gap: var(--tdlb-key-summary-item-gap);
 	list-style: none;
 	margin: 0;
 	padding: 0;
 }
 
+/*
+ * Keep Automattic's native event markup and click/delete behavior intact while
+ * presenting each key point as a compact editorial row. The timestamp forms a
+ * supporting column and the key-event content remains the primary click target.
+ */
 .tdlb-liveblog .tdlb-key-events .liveblog-event {
+	position: relative;
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
 	margin: 0;
 	padding: var(--tdlb-key-summary-item-padding);
 	border-bottom: var(--tdlb-key-summary-item-border-width) solid var(--tdlb-key-summary-item-border-color);
 }
 
 .tdlb-liveblog .tdlb-key-events .liveblog-event + .liveblog-event {
-	margin-top: var(--tdlb-key-summary-item-gap);
+	margin-top: 0;
 }
 
 .tdlb-liveblog .tdlb-key-events .liveblog-event:last-child {
 	border-bottom-width: 0;
 }
 
+.tdlb-liveblog .tdlb-key-events .liveblog-event-body {
+	display: grid;
+	grid-template-columns: minmax(72px, max-content) minmax(0, 1fr);
+	column-gap: 16px;
+	align-items: start;
+	min-width: 0;
+}
+
 .tdlb-liveblog .tdlb-key-events .liveblog-event-meta {
-	margin-bottom: 4px;
-	font-size: 0.875em;
-	opacity: 0.72;
+	margin: 0;
+	padding-top: 0.08em;
+	font-size: 0.8125em;
+	line-height: 1.35;
+	opacity: 0.68;
+	white-space: nowrap;
+}
+
+.tdlb-liveblog .tdlb-key-events .liveblog-event-body > div:last-child {
+	position: relative;
+	min-width: 0;
+}
+
+.tdlb-liveblog .tdlb-key-events .liveblog-event-body > div:last-child:has(.liveblog-editor-delete) {
+	padding-inline-end: 34px;
 }
 
 .tdlb-liveblog .tdlb-key-events .liveblog-event-content {
+	display: block;
 	color: inherit;
+	line-height: 1.45;
 	cursor: pointer;
+	text-decoration: none;
+	overflow-wrap: anywhere;
+}
+
+.tdlb-liveblog .tdlb-key-events .liveblog-event-content:hover,
+.tdlb-liveblog .tdlb-key-events .liveblog-event-content:focus-visible {
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 3px;
+}
+
+.tdlb-liveblog .tdlb-key-events .liveblog-event-content > :first-child {
+	margin-top: 0;
+}
+
+.tdlb-liveblog .tdlb-key-events .liveblog-event-content > :last-child {
+	margin-bottom: 0;
+}
+
+/* Editor-only native Key Event removal control: keep it secondary to reading. */
+.tdlb-liveblog .tdlb-key-events .liveblog-editor-delete {
+	position: absolute;
+	top: -4px;
+	inset-inline-end: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	margin: 0;
+	border-radius: 50%;
+	opacity: 0.58;
+	cursor: pointer;
+}
+
+.tdlb-liveblog .tdlb-key-events .liveblog-editor-delete:hover,
+.tdlb-liveblog .tdlb-key-events .liveblog-editor-delete:focus-visible {
+	opacity: 1;
+}
+
+@media (max-width: 600px) {
+	.tdlb-liveblog .tdlb-key-events .liveblog-event-body {
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: 4px;
+	}
+
+	.tdlb-liveblog .tdlb-key-events .liveblog-event-meta {
+		padding-top: 0;
+		white-space: normal;
+	}
 }
 
 .tdlb-liveblog #wpcom-liveblog-container,
