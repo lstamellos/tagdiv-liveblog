@@ -11,12 +11,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 final class Tagdiv_Liveblog_Key_Events {
 	/**
+	 * Upstream per-post Key Events template meta key.
+	 *
+	 * @var string
+	 */
+	const TEMPLATE_META_KEY = '_liveblog_key_entry_template';
+
+	/**
 	 * Register upstream Liveblog extension hooks.
 	 *
 	 * @return void
 	 */
 	public static function init() {
 		add_filter( 'liveblog_key_formats', array( __CLASS__, 'register_formats' ) );
+		add_filter( 'body_class', array( __CLASS__, 'add_template_body_class' ) );
+		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_template_presentation' ), 20 );
 	}
 
 	/**
@@ -86,9 +95,72 @@ final class Tagdiv_Liveblog_Key_Events {
 				if ( '' !== $text ) {
 					return $text;
 				}
-			}
+		}
 		}
 
 		return trim( wp_strip_all_tags( $editorial_content ) );
+	}
+
+	/**
+	 * Resolve the intended upstream Key Events presentation mode.
+	 *
+	 * Automattic Liveblog 1.12.x still stores the legacy timeline/list choice,
+	 * but its React EventsContainer no longer consumes that value. The adapter
+	 * reuses it only as a presentation hint for the existing native React DOM.
+	 *
+	 * @param int $post_id Liveblog post ID.
+	 * @return string
+	 */
+	public static function get_template_mode( $post_id ) {
+		$template = get_post_meta( absint( $post_id ), self::TEMPLATE_META_KEY, true );
+
+		return 'list' === $template ? 'list' : 'timeline';
+	}
+
+	/**
+	 * Expose the resolved per-liveblog template mode as a page presentation class.
+	 *
+	 * @param array<int,string> $classes Existing body classes.
+	 * @return array<int,string>
+	 */
+	public static function add_template_body_class( $classes ) {
+		if ( ! class_exists( 'Tagdiv_Liveblog_Plugin' ) || ! Tagdiv_Liveblog_Plugin::is_liveblog_post() ) {
+			return $classes;
+		}
+
+		$post_id = Tagdiv_Liveblog_Plugin::get_liveblog_post_id();
+		if ( $post_id <= 0 ) {
+			return $classes;
+		}
+
+		$classes[] = 'tdlb-key-events-template-' . self::get_template_mode( $post_id );
+
+		return array_values( array_unique( $classes ) );
+	}
+
+	/**
+	 * Add the minimal React presentation mapping for the upstream list mode.
+	 *
+	 * The timeline mode remains the default stylesheet layout: timestamp plus
+	 * content. The legacy list meaning is content-only, so hide the React meta
+	 * timestamp and collapse each event to one content column. No React markup,
+	 * navigation, state or delete behavior is changed.
+	 *
+	 * @return void
+	 */
+	public static function enqueue_template_presentation() {
+		if ( ! wp_style_is( 'tagdiv-liveblog', 'enqueued' ) ) {
+			return;
+		}
+
+		$css = implode(
+			"\n",
+			array(
+				'.tdlb-key-events-template-list .tdlb-liveblog .tdlb-key-events .liveblog-event-body { grid-template-columns: minmax(0, 1fr); }',
+				'.tdlb-key-events-template-list .tdlb-liveblog .tdlb-key-events .liveblog-event-meta { display: none; }',
+			)
+		);
+
+		wp_add_inline_style( 'tagdiv-liveblog', $css );
 	}
 }
