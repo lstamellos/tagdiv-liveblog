@@ -588,7 +588,8 @@ final class Tagdiv_Liveblog_Plugin {
 	}
 
 	/**
-	 * Load presentation CSS and, on actual liveblog posts, integration scripts.
+	 * Load presentation CSS only where the Liveblog block can render, while
+	 * keeping the stylesheet available inside TagDiv Composer for previewing.
 	 *
 	 * @return void
 	 */
@@ -597,7 +598,10 @@ final class Tagdiv_Liveblog_Plugin {
 			return;
 		}
 
-		if ( ! is_singular() && ! self::is_composer_request() ) {
+		$is_composer = self::is_composer_request();
+		$is_liveblog = self::is_liveblog_post();
+
+		if ( ! $is_composer && ! $is_liveblog ) {
 			return;
 		}
 
@@ -608,46 +612,48 @@ final class Tagdiv_Liveblog_Plugin {
 			TAGDIV_LIVEBLOG_VERSION
 		);
 
-		if ( self::is_liveblog_post() ) {
+		if ( ! $is_liveblog ) {
+			return;
+		}
+
+		wp_enqueue_script(
+			'tagdiv-liveblog-relocate',
+			TAGDIV_LIVEBLOG_URL . 'assets/js/tagdiv-liveblog-relocate.js',
+			array(),
+			TAGDIV_LIVEBLOG_VERSION,
+			true
+		);
+
+		if ( self::current_user_can_manage_liveblog() ) {
+			wp_enqueue_style(
+				'tagdiv-liveblog-management',
+				TAGDIV_LIVEBLOG_URL . 'assets/css/tagdiv-liveblog-management.css',
+				array( 'tagdiv-liveblog' ),
+				TAGDIV_LIVEBLOG_VERSION
+			);
+
 			wp_enqueue_script(
-				'tagdiv-liveblog-relocate',
-				TAGDIV_LIVEBLOG_URL . 'assets/js/tagdiv-liveblog-relocate.js',
+				'tagdiv-liveblog-management',
+				TAGDIV_LIVEBLOG_URL . 'assets/js/tagdiv-liveblog-management.js',
 				array(),
 				TAGDIV_LIVEBLOG_VERSION,
 				true
 			);
 
-			if ( self::current_user_can_manage_liveblog() ) {
-				wp_enqueue_style(
-					'tagdiv-liveblog-management',
-					TAGDIV_LIVEBLOG_URL . 'assets/css/tagdiv-liveblog-management.css',
-					array( 'tagdiv-liveblog' ),
-					TAGDIV_LIVEBLOG_VERSION
-				);
-
-				wp_enqueue_script(
-					'tagdiv-liveblog-management',
-					TAGDIV_LIVEBLOG_URL . 'assets/js/tagdiv-liveblog-management.js',
-					array(),
-					TAGDIV_LIVEBLOG_VERSION,
-					true
-				);
-
-				wp_localize_script(
-					'tagdiv-liveblog-management',
-					'tagdiv_liveblog_management',
-					array(
-						'ajax_url'        => admin_url( 'admin-ajax.php' ),
-						'action'          => 'set_liveblog_state_for_post',
-						'nonce_key'       => WPCOM_Liveblog::NONCE_KEY,
-						'nonce'           => wp_create_nonce( WPCOM_Liveblog::NONCE_ACTION ),
-						'post_id'         => self::get_liveblog_post_id(),
-						'archive_confirm' => __( 'Archive this liveblog?', 'tagdiv-liveblog' ),
-						'working'         => __( 'Updating…', 'tagdiv-liveblog' ),
-						'error'           => __( 'The Liveblog state could not be updated. Please try again.', 'tagdiv-liveblog' ),
-					)
-				);
-			}
+			wp_localize_script(
+				'tagdiv-liveblog-management',
+				'tagdiv_liveblog_management',
+				array(
+					'ajax_url'        => admin_url( 'admin-ajax.php' ),
+					'action'          => 'set_liveblog_state_for_post',
+					'nonce_key'       => WPCOM_Liveblog::NONCE_KEY,
+					'nonce'           => wp_create_nonce( WPCOM_Liveblog::NONCE_ACTION ),
+					'post_id'         => self::get_liveblog_post_id(),
+					'archive_confirm' => __( 'Archive this liveblog?', 'tagdiv-liveblog' ),
+					'working'         => __( 'Updating…', 'tagdiv-liveblog' ),
+					'error'           => __( 'The Liveblog state could not be updated. Please try again.', 'tagdiv-liveblog' ),
+				)
+			);
 		}
 	}
 
