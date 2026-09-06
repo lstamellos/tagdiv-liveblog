@@ -247,6 +247,10 @@ final class Tagdiv_Liveblog_Realtime {
 			return false;
 		}
 
+		if ( ! self::is_post_allowed( $post_id ) ) {
+			return false;
+		}
+
 		$post = get_post( $post_id );
 		if ( ! $post instanceof WP_Post || 'publish' !== get_post_status( $post ) ) {
 			return false;
@@ -264,6 +268,50 @@ final class Tagdiv_Liveblog_Realtime {
 		}
 
 		return 'enable' === $state;
+	}
+
+	/**
+	 * Whether a post is allowed to use the optional realtime transport.
+	 *
+	 * When TAGDIV_LIVEBLOG_REALTIME_POST_IDS is undefined, all otherwise
+	 * eligible Liveblogs are allowed. When it is defined, it acts as an
+	 * allowlist and accepts either an array of IDs or a comma-separated string.
+	 * Defining it as an empty value deliberately allows no posts, which is useful
+	 * as a deployment safety switch.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return bool
+	 */
+	private static function is_post_allowed( $post_id ) {
+		if ( ! defined( 'TAGDIV_LIVEBLOG_REALTIME_POST_IDS' ) ) {
+			$allowed = true;
+		} else {
+			$configured = TAGDIV_LIVEBLOG_REALTIME_POST_IDS;
+
+			if ( is_string( $configured ) ) {
+				$configured = preg_split( '/\s*,\s*/', trim( $configured ), -1, PREG_SPLIT_NO_EMPTY );
+			} elseif ( ! is_array( $configured ) ) {
+				$configured = array( $configured );
+			}
+
+			$ids = array_values(
+				array_unique(
+					array_filter(
+						array_map( 'absint', $configured )
+					)
+				)
+			);
+
+			$allowed = in_array( (int) $post_id, $ids, true );
+		}
+
+		/**
+		 * Filters whether a post may use the adapter realtime transport.
+		 *
+		 * @param bool $allowed Whether the post is allowed.
+		 * @param int  $post_id Post ID.
+		 */
+		return (bool) apply_filters( 'tagdiv_liveblog_realtime_post_allowed', $allowed, $post_id );
 	}
 
 	/**
