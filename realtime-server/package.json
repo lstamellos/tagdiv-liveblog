@@ -1,0 +1,18 @@
+{
+  "name": "tagdiv-liveblog-realtime-server",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Optional Socket.IO 4 realtime signal bridge for tagDiv Liveblog",
+  "license": "GPL-2.0-or-later",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js"
+  },
+  "dependencies": {
+    "ioredis": "6.0.0",
+    "socket.io": "4.8.3"
+  }
+}

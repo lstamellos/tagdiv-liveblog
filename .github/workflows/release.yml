@@ -64,7 +64,8 @@ jobs:
           rsync -a ./ dist/tagdiv-liveblog/ \
             --exclude '.git' \
             --exclude '.github' \
-            --exclude 'dist'
+            --exclude 'dist' \
+            --exclude 'realtime-server'
           (
             cd dist
             zip -qr "tagdiv-liveblog-${VERSION}.zip" tagdiv-liveblog
