@@ -183,8 +183,17 @@
 			scheduleReconcile();
 		} );
 
-		runtime.socket.on( 'disconnect', function() {
+		runtime.socket.on( 'disconnect', function( reason ) {
 			resumePolling();
+
+			// Socket.IO intentionally disables automatic reconnection after an
+			// explicit server-side disconnect. The reference server uses that
+			// path when Redis becomes unavailable and during a controlled service
+			// shutdown, so restart the connection manager while native polling
+			// remains active as the fallback.
+			if ( reason === 'io server disconnect' ) {
+				runtime.socket.connect();
+			}
 		} );
 
 		runtime.socket.on( 'connect_error', function() {
