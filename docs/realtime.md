@@ -42,7 +42,10 @@ Realtime is enabled only when all of the following are true:
 - `TAGDIV_LIVEBLOG_REALTIME_ENABLED` is true;
 - Automattic's legacy `LIVEBLOG_USE_SOCKETIO` is not true;
 - the post is published and publicly viewable;
-- the Liveblog state is exactly `enable`.
+- the Liveblog state is exactly `enable`;
+- if `TAGDIV_LIVEBLOG_REALTIME_POST_IDS` is defined, the post ID is present in that allowlist.
+
+`TAGDIV_LIVEBLOG_REALTIME_POST_IDS` is optional and is intended for canary/staged rollouts. It accepts either an array of post IDs or a comma-separated string. When the constant is undefined, all otherwise eligible Liveblogs may use realtime. When it is defined but empty, no posts are allowed. The final decision can also be filtered with `tagdiv_liveblog_realtime_post_allowed`.
 
 ## WordPress configuration
 
@@ -53,6 +56,12 @@ define( 'TAGDIV_LIVEBLOG_REALTIME_PATH', '/socket.io/' );
 define( 'TAGDIV_LIVEBLOG_REALTIME_REDIS_HOST', '127.0.0.1' );
 define( 'TAGDIV_LIVEBLOG_REALTIME_REDIS_PORT', 6379 );
 define( 'TAGDIV_LIVEBLOG_REALTIME_REDIS_CHANNEL', 'tagdiv-liveblog:events' );
+```
+
+Optional staged-rollout allowlist:
+
+```php
+define( 'TAGDIV_LIVEBLOG_REALTIME_POST_IDS', array( 123, 456 ) );
 ```
 
 Optional Redis ACL/password constants are `TAGDIV_LIVEBLOG_REALTIME_REDIS_USERNAME` and `TAGDIV_LIVEBLOG_REALTIME_REDIS_PASSWORD`. Optional timeouts are `TAGDIV_LIVEBLOG_REALTIME_REDIS_TIMEOUT` (seconds) and `TAGDIV_LIVEBLOG_REALTIME_RECONCILE_TIMEOUT` (milliseconds).
@@ -106,7 +115,8 @@ Redis and Socket.IO are invalidation transports only. Entry data remains authori
 4. Add and validate the HTTPS reverse proxy.
 5. Verify the Socket.IO client bundle and WebSocket upgrade externally.
 6. Deploy tagDiv Liveblog 0.2.0 with realtime still disabled.
-7. Add the WordPress realtime constants last.
-8. Validate on a public canary Liveblog.
+7. Add the WordPress realtime constants last, preferably with `TAGDIV_LIVEBLOG_REALTIME_POST_IDS` restricted to a canary post first.
+8. Validate realtime insert/update/delete and polling fallback on the canary Liveblog.
+9. Remove the staged-rollout allowlist only after canary validation succeeds.
 
 Rollback is immediate: remove or set `TAGDIV_LIVEBLOG_REALTIME_ENABLED` to false. Native polling remains authoritative.
