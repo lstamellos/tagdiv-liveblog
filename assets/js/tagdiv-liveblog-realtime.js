@@ -268,8 +268,9 @@
 			} );
 
 			// The upstream updatePollingInterval middleware may restart polling when
-			// a response changes refresh_interval. Cancel after the authoritative
-			// response has passed through all native middleware/reducers.
+			// a response changes refresh_interval. Always cancel after the
+			// authoritative response has passed through all native middleware and
+			// reducers, including on later reconciliations.
 			if ( runtime.socket && runtime.socket.connected ) {
 				suspendPolling();
 			}
@@ -327,10 +328,13 @@
 	}
 
 	function suspendPolling() {
-		if ( runtime.pollingSuspended || ! runtime.store ) {
+		if ( ! runtime.store ) {
 			return;
 		}
 
+		// This is intentionally idempotent at the Redux level. Re-dispatching
+		// CANCEL_POLLING also cancels any polling loop that upstream middleware
+		// may have restarted while processing the reconciliation response.
 		runtime.store.dispatch( { type: 'CANCEL_POLLING' } );
 		runtime.pollingSuspended = true;
 	}
